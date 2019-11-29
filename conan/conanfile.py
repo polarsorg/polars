@@ -14,11 +14,6 @@ class PolarsConan(ConanFile):
     exports_sources = "../*", "!dependencies/*", "!build"
     requires = "Armadillo/9.200.1", "date/2.4.1"
 
-    def build_requirements(self):
-        # Or add a new requirement!
-        if self.settings.os == 'Android':
-            self.build_requires("android_ndk_installer/r20@bincrafters/stable")
-
     def build(self):
         cmake = CMake(self)
         cmake.definitions["WITH_TESTS"] = "OFF"
