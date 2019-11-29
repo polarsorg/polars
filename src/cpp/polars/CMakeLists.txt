@@ -22,7 +22,7 @@ if(BUILD_WITH_CONAN)
   conan_basic_setup(TARGETS)
 
   set(polars_dep_armadillo CONAN_PKG::Armadillo)
-  set(polars_dep_date CONAN_PKG::Date)
+  set(polars_dep_date CONAN_PKG::date)
 else()
   set(polars_dep_armadillo armadillo)
   set(polars_dep_date date_interface)

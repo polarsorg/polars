@@ -1,175 +1,138 @@
-version: 2
+version: 2.1
 jobs:
-  mac_os_make_9_4:
-    macos:
-      xcode: "9.4.0"
-
-    steps:
-      - checkout
-      - run: xcodebuild -version
-      - run: git submodule update --init --recursive
-
-      - run:
-          name: Install CMake
-          environment:
-            HOMEBREW_NO_AUTO_UPDATE: 1
-          command: brew install cmake
-
-      - run:
-          name: Build with cmake
-          command: |
-            mkdir -p build/cmake-makefile-debug
-            cd build/cmake-makefile-debug
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../..
-            cmake --build . --target all -- -j 2
-
-      - run:
-          name: Run c++ tests
-          command: build/cmake-makefile-debug/polars_cpp_test
-
-  mac_os_make_10_0:
-    macos:
-      xcode: "10.0.0"
-
-    steps:
-      - checkout
-      - run: xcodebuild -version
-      - run: git submodule update --init --recursive
-
-      - run:
-          name: Install CMake
-          environment:
-            HOMEBREW_NO_AUTO_UPDATE: 1
-          command: brew install cmake
-
-      - run:
-          name: Build with cmake
-          command: |
-            mkdir -p build/cmake-makefile-debug
-            cd build/cmake-makefile-debug
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../..
-            cmake --build . --target all -- -j 2
-
-      - run:
-          name: Run c++ tests
-          command: build/cmake-makefile-debug/polars_cpp_test
-
-  mac_os_make_10_0_release:
-    macos:
-      xcode: "10.0.0"
-
-    steps:
-      - checkout
-      - run: xcodebuild -version
-      - run: git submodule update --init --recursive
-
-      - run:
-          name: Install CMake
-          environment:
-            HOMEBREW_NO_AUTO_UPDATE: 1
-          command: brew install cmake
-
-      - run:
-          name: Build with cmake
-          command: |
-            mkdir -p build/cmake-makefile-release
-            cd build/cmake-makefile-release
-            cmake -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" ../..
-            cmake --build . --target all -- -j 2
-
-      - run:
-          name: Run c++ tests
-          command: build/cmake-makefile-release/polars_cpp_test
-
-  xcode_9_4:
-    macos:
-      xcode: "9.4.0"
-
-    steps:
-      - checkout
-      - run: xcodebuild -version
-      - run: git submodule update --init --recursive
-
-      - run:
-          name: Install CMake
-          environment:
-            HOMEBREW_NO_AUTO_UPDATE: 1
-          command: brew install cmake
-
-      - run:
-          name: Build with cmake
-          command: |
-            mkdir -p build/cmake-xcode-debug
-            cd build/cmake-xcode-debug
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Xcode" ../..
-            cmake --build . --target ALL_BUILD -- -j 2
-            cmake --build . --target polars_cpp_test -- -j 2
-
-      - run:
-          name: Run c++ tests
-          command: build/cmake-xcode-debug/Debug/polars_cpp_test
-
-  xcode_10_0:
-    macos:
-      xcode: "10.0.0"
-
-    steps:
-      - checkout
-      - run: xcodebuild -version
-      - run: git submodule update --init --recursive
-
-      - run:
-          name: Install CMake
-          environment:
-            HOMEBREW_NO_AUTO_UPDATE: 1
-          command: brew install cmake
-
-      - run:
-          name: Build with cmake
-          command: |
-            mkdir -p build/cmake-xcode-debug
-            cd build/cmake-xcode-debug
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Xcode" ../..
-            cmake --build . --target ALL_BUILD -- -j 2
-            cmake --build . --target polars_cpp_test -- -j 2
-
-      - run:
-          name: Run c++ tests
-          command: build/cmake-xcode-debug/Debug/polars_cpp_test
-
-  debian_make:
+  create:
+    working_directory: ~/circleci-polars
     docker:
-      - image: circleci/buildpack-deps:bionic
-
+      - image: circleci/python:3.7.2
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+          CONAN_NON_INTERACTIVE: true
     steps:
       - checkout
 
       - run:
-          name: Install Dependencies
-          command: sudo apt-get update && sudo apt-get install -y cmake clang && sudo apt-get clean
-          # TODO pin versions of docker image, cmake and clang
-
-      - run: git submodule update --init --recursive
-
-      - run:
-          name: Build with cmake
+          name: Set permissions
           command: |
-            mkdir -p build/cmake-makefile-debug
-            cd build/cmake-makefile-debug
-            cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" ../..
-            cmake --build . --target all -- -j 2
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+
+      - restore_cache:
+          name: Restore pipenv cache
+          keys:
+            - pipenv-v1-{{ checksum "Pipfile.lock" }}
+            - pipenv-v1-
 
       - run:
-          name: Run c++ tests
-          command: build/cmake-makefile-debug/polars_cpp_test
+          name: Install pipenv
+          command: sudo pip install pipenv
+
+      - run:
+          name: Install python dependencies
+          command: |
+            pipenv clean
+            pipenv install --dev
+
+      - save_cache:
+          name: Save pipenv cache
+          key: pipenv-v1-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
+
+      - restore_cache:
+          name: Restore conan dependencies cache
+          keys:
+            - conan-v1-{{ checksum "conan/conanfile.py" }}
+
+      - run:
+          name: Add remotes
+          command: |
+            pipenv run conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
+            pipenv run conan remote add polars-org-remote https://api.bintray.com/conan/polarsorg/Polars
+
+      - run:
+          name: Native build
+          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing
+      - run:
+          name: Cross-build android arm64-v8a abi
+          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing --profile ./conan/profiles/android-arm64-v8a
+
+      # Run tests - need to add gtest requirements first
+
+      - save_cache:
+          name: Save conan dependencies cache
+          key: conan-v1-{{ checksum "conan/conanfile.py" }}
+          paths:
+            - "~/.conan/data/Armadillo"
+            - "~/.conan/data/android_ndk_installer"
+            - "~/.conan/data/openblas"
+            - "~/.conan/data/pkg-config_installer"
+
+  push-recipe:
+    working_directory: ~/circleci-polars
+    docker:
+      - image: circleci/python:3.7.2
+        environment:
+          PIPENV_VENV_IN_PROJECT: true
+          CONAN_NON_INTERACTIVE: true
+    steps:
+      - checkout
+
+      - run:
+          name: Set permissions
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+
+      - restore_cache:
+          name: Restore pipenv cache
+          keys:
+            - pipenv-v1-{{ checksum "Pipfile.lock" }}
+            - pipenv-v1-
+
+      - run:
+          name: Install pipenv
+          command: sudo pip install pipenv
+
+      - run:
+          name: Install python dependencies
+          command: |
+            pipenv clean
+            pipenv install --dev
+
+      - save_cache:
+          name: Save pipenv cache
+          key: pipenv-v1-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
+
+      # No need to do any compiling here as we have already run the create job.
+
+      - run:
+          name: Add remotes and login
+          command: |
+            pipenv run conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
+            pipenv run conan remote add polars-org-remote https://api.bintray.com/conan/polarsorg/Polars
+            pipenv run conan user -p $CONAN_API_KEY -r polars-org-remote $CONAN_LOGIN_USERNAME
+
+      - run:
+          name: Upload recipe
+          command: |
+            pipenv run conan export conan
+            pipenv run conan upload -r polars-org-remote --confirm Polars/*
 
 workflows:
   version: 2
-  test_all:
+  main:
     jobs:
-      - mac_os_make_9_4
-      - mac_os_make_10_0
-      - mac_os_make_10_0_release
-      - xcode_9_4
-      - xcode_10_0
-      - debian_make
+      - create
+      - push-recipe:
+          context: bintray-machine-user
+          requires:
+            - create
+          filters:
+            branches:
+              only: master

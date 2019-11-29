@@ -32,17 +32,25 @@ To install - WIP (need to add the install() command to the CMakeLists.txt)
 
 ### Building with Conan
 
-```
-cd conan
-conan create . felix/master -s cppstd=14
-```
-...where `felix/master` refers to an official release that comes from a merge-commit on the master branch. Any other builds should be under `username/dev`
 
 
 Building with Conan requires:
-* `Armadillo/9.200.1@felix/stable` ([repo](https://github.com/felix-org/conan-armadillo))
-* `Date/2.4.1@felix/stable` ([repo](https://github.com/felix-org/conan-date))
+* `Armadillo/9.200.1` ([repo](https://github.com/polarsorg/conan-armadillo))
+* `date/2.4.1` ([repo](https://github.com/conan-io/conan-center-index), [bintray](https://bintray.com/conan/conan-center/date%3A_))
 
+Armadillo and polars can both be found in the polars org remote. Build with:
+
+```
+conan remote add polars-org https://api.bintray.com/conan/polarsorg/Polars
+cd conan
+conan create . -s compiler.cppstd=14 --build missing
+ ```
+
+To build for android:
+
+```
+conan create . -s compiler.cppstd=14 --build missing --profile ./profiles/android-arm64-v8a
+```
 
 ## What is polars?
 
