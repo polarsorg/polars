@@ -46,8 +46,10 @@ jobs:
             - conan-v1-{{ checksum "conan/conanfile.py" }}
 
       - run:
-          name: Add remote
-          command: pipenv run conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
+          name: Add remotes
+          command: |
+            pipenv run conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
+            pipenv run conan remote add polars-org-remote https://api.bintray.com/conan/polarsorg/Polars
 
       - run:
           name: Native build
