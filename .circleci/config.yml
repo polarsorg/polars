@@ -43,7 +43,7 @@ jobs:
       - restore_cache:
           name: Restore conan dependencies cache
           keys:
-            - conan-v1-{{ checksum "conanfile.py" }}
+            - conan-v1-{{ checksum "conan/conanfile.py" }}
 
       - run:
           name: Add remote
@@ -60,7 +60,7 @@ jobs:
 
       - save_cache:
           name: Save conan dependencies cache
-          key: conan-v1-{{ checksum "conanfile.py" }}
+          key: conan-v1-{{ checksum "conan/conanfile.py" }}
           paths:
             - "~/.conan/data/Armadillo"
             - "~/.conan/data/android_ndk_installer"
