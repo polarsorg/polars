@@ -7,6 +7,11 @@ class PolarsTestConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
 
+    def build_requirements(self):
+        # Or add a new requirement!
+        if self.settings.os == 'Android':
+            self.build_requires("android_ndk_installer/r20@bincrafters/stable")
+
     def build(self):
         cmake = CMake(self)
         # Current dir is "test_package/build/<build_id>" and CMakeLists.txt is

@@ -7,12 +7,17 @@ class PolarsConan(ConanFile):
     url = "https://github.com/polarsorg/polars"
     license = "MIT License"
     description = "A C++ TimeSeries library that aims to mimic pandas Series"
-    settings = "cppstd", "os", "compiler", "build_type", "arch"
+    settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False]}
     default_options = "shared=False"
     generators = "cmake"
     exports_sources = "../*", "!dependencies/*", "!build"
     requires = "Armadillo/9.200.1", "date/2.4.1"
+
+    def build_requirements(self):
+        # Or add a new requirement!
+        if self.settings.os == 'Android':
+            self.build_requires("android_ndk_installer/r20@bincrafters/stable")
 
     def build(self):
         cmake = CMake(self)
