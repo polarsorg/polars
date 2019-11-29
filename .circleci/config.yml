@@ -51,10 +51,10 @@ jobs:
 
       - run:
           name: Native build
-          command: pipenv run conan create . -s compiler.cppstd=14 --build missing
+          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing
       - run:
           name: Cross-build android arm64-v8a abi
-          command: pipenv run conan create . -s compiler.cppstd=14 --profile ./profiles/android-arm64-v8a --build missing
+          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing --profile ./conan/profiles/android-arm64-v8a
 
       # Run tests - need to add gtest requirements first
 
@@ -119,7 +119,7 @@ jobs:
       - run:
           name: Upload recipe
           command: |
-            pipenv run conan export .
+            pipenv run conan export conan
             pipenv run conan upload -r polars-org-remote --confirm Polars/*
 
 workflows:
