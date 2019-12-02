@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD 14)
 option(WITH_TESTS "Build polars_cpp_test target" ON)
 option(BUILD_WITH_CONAN "Resolve dependencies using conan" OFF)
 
-if(NOT BUILD_WITH_CONAN)
+
+if(BUILD_WITH_CONAN)
+  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+  conan_basic_setup(TARGETS)
+else()
   # Dependencies
   include(dependencies/CMakeLists.txt)
 endif()
