@@ -53,12 +53,21 @@ jobs:
 
       - run:
           name: Native build
-          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing
+          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing --option Polars:with_tests=True
       - run:
           name: Cross-build android arm64-v8a abi
           command: pipenv run conan create conan -s compiler.cppstd=14 --build missing --profile ./conan/profiles/android-arm64-v8a
+      - run:
+          name: Cross-build android x86_64 abi
+          command: pipenv run conan create conan -s compiler.cppstd=14 --build missing --option Polars:with_tests=True --profile ./conan/profiles/android-x86_64
 
-      # Run tests - need to add gtest requirements first
+      - run:
+          name: Unit tests
+          command: |
+            pipenv run conan source conan  --source-folder=source/ci
+            pipenv run conan install conan --install-folder=build/ci --option Polars:with_tests=True
+            pipenv run conan build conan   --source-folder=source/ci --build-folder=build/ci
+            build/ci/bin/polars_cpp_test
 
       - save_cache:
           name: Save conan dependencies cache

@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, CMake
 
 
 class PolarsConan(ConanFile):
@@ -8,15 +8,22 @@ class PolarsConan(ConanFile):
     license = "MIT License"
     description = "A C++ TimeSeries library that aims to mimic pandas Series"
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    options = {
+        "shared": [True, False],
+        "with_tests": [True, False],
+    }
+    default_options = "shared=False", "with_tests=False"
     generators = "cmake"
     exports_sources = "../*", "!dependencies/*", "!build"
     requires = "Armadillo/9.200.1", "date/2.4.1"
 
+    def requirements(self):
+        if self.options.with_tests:
+            self.requires("gtest/1.10.0")
+
     def build(self):
         cmake = CMake(self)
-        cmake.definitions["WITH_TESTS"] = "OFF"
+        cmake.definitions["WITH_TESTS"] = self.options.with_tests
         cmake.definitions["BUILD_WITH_CONAN"] = "ON"
         cmake.configure()
         cmake.build()

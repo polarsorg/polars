@@ -1,5 +1,3 @@
-add_subdirectory(dependencies/googletest)
-
 set(TEST_CPP_SOURCE_DIR "tests/test_cpp/polars")
 
 add_executable(
@@ -12,4 +10,8 @@ add_executable(
         ${TEST_CPP_SOURCE_DIR}/TestWindowProcessor.cpp
 )
 
-target_link_libraries(polars_cpp_test polars_cpp gtest_main)
+if(BUILD_WITH_CONAN)
+    target_link_libraries(polars_cpp_test polars_cpp CONAN_PKG::GTest)
+else()
+    target_link_libraries(polars_cpp_test polars_cpp gtest_main)
+endif()
