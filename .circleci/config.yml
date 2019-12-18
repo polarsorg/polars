@@ -85,12 +85,6 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Set permissions
-          command: |
-            sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
-
       - restore_cache:
           name: Restore pipenv cache
           keys:
