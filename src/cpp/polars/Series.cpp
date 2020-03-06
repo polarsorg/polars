@@ -737,6 +737,13 @@ namespace polars {
         }
     }
 
+    Series Series::arctan(const Series &lhs, const Series &rhs) {
+        arma::vec x = lhs.values();
+        arma::vec y = rhs.values();
+        arma::vec result = numc::arctan(x, y);
+        return Series(result, lhs.index());
+    }
+
     /**
      * Add support for pretty printing of a Series object.
      * @param os the output stream that will be written to
