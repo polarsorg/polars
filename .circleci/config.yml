@@ -19,8 +19,8 @@ jobs:
       - restore_cache:
           name: Restore pipenv cache
           keys:
-            - pipenv-v1-{{ checksum "Pipfile.lock" }}
-            - pipenv-v1-
+            - pipenv-v2-{{ checksum "Pipfile.lock" }}
+            - pipenv-v2-
 
       - run:
           name: Install pipenv
@@ -34,7 +34,7 @@ jobs:
 
       - save_cache:
           name: Save pipenv cache
-          key: pipenv-v1-{{ checksum "Pipfile.lock" }}
+          key: pipenv-v2-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
@@ -43,7 +43,7 @@ jobs:
       - restore_cache:
           name: Restore conan dependencies cache
           keys:
-            - conan-v1-{{ checksum "conan/conanfile.py" }}
+            - conan-v2-{{ checksum "conan/conanfile.py" }}
 
       - run:
           name: Add remotes
@@ -65,13 +65,13 @@ jobs:
           name: Unit tests
           command: |
             pipenv run conan source conan  --source-folder=source/ci
-            pipenv run conan install conan --install-folder=build/ci --option Polars:with_tests=True
+            pipenv run conan install conan --install-folder=build/ci --build missing --option Polars:with_tests=True
             pipenv run conan build conan   --source-folder=source/ci --build-folder=build/ci
             build/ci/bin/polars_cpp_test
 
       - save_cache:
           name: Save conan dependencies cache
-          key: conan-v1-{{ checksum "conan/conanfile.py" }}
+          key: conan-v2-{{ checksum "conan/conanfile.py" }}
           paths:
             - "~/.conan/data/Armadillo"
             - "~/.conan/data/android_ndk_installer"
@@ -97,8 +97,8 @@ jobs:
       - restore_cache:
           name: Restore pipenv cache
           keys:
-            - pipenv-v1-{{ checksum "Pipfile.lock" }}
-            - pipenv-v1-
+            - pipenv-v2-{{ checksum "Pipfile.lock" }}
+            - pipenv-v2-
 
       - run:
           name: Install pipenv
@@ -112,7 +112,7 @@ jobs:
 
       - save_cache:
           name: Save pipenv cache
-          key: pipenv-v1-{{ checksum "Pipfile.lock" }}
+          key: pipenv-v2-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"

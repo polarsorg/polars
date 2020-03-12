@@ -11,7 +11,7 @@ add_executable(
 )
 
 if(BUILD_WITH_CONAN)
-    target_link_libraries(polars_cpp_test polars_cpp CONAN_PKG::GTest)
+    target_link_libraries(polars_cpp_test polars_cpp CONAN_PKG::gtest)
 else()
     target_link_libraries(polars_cpp_test polars_cpp gtest_main)
 endif()
