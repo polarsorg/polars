@@ -174,7 +174,7 @@ TEST(numc, arctan){
     EXPECT_PRED2(
             polars::numc::equal_handing_nans,
             arma::vec({0.1243549945, 0.24497866, 0.49180918}),
-            polars::numc::arctan( arma::vec({0.25, 0.75, 0.75}), arma::vec({2., 3., 1.4}}))
+            polars::numc::arctan( arma::vec({0.25, 0.75, 0.75}), arma::vec({2., 3., 1.4}))
     ) << "Expect " << " return of standard vector.";
 
     EXPECT_PRED2(
