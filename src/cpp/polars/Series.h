@@ -151,7 +151,7 @@ namespace polars {
 
         Series tail(int n=5) const;
 
-        Series arctan(const Series &lhs, const Series &rhs);
+        static Series arctan(const Series &lhs, const Series &rhs);
 
     protected:
         arma::vec t;

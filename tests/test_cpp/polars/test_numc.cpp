@@ -172,19 +172,19 @@ TEST(numc, exponential){
 
 TEST(numc, arctan){
     EXPECT_PRED2(
-            polars::numc::equal_handing_nans,
+            polars::numc::equal_handling_nans,
             arma::vec({0.1243549945, 0.24497866, 0.49180918}),
             polars::numc::arctan( arma::vec({0.25, 0.75, 0.75}), arma::vec({2., 3., 1.4}))
     ) << "Expect " << " return of standard vector.";
 
     EXPECT_PRED2(
-            polars::numc::equal_handing_nans,
+            polars::numc::equal_handling_nans,
             arma::vec({1.44644133, 1.57079633, 0.}),
             polars::numc::arctan( arma::vec({2., 3., 0}), arma::vec({0.25, 0., 0.}))
     ) << "Expect " << " return of standard vector with zeros, due to internal behaviour of arctan2.";
 
     EXPECT_PRED2(
-            polars::numc::equal_handing_nans,
+            polars::numc::equal_handling_nans,
             arma::vec({1.76819189, NAN, NAN}),
             polars::numc::arctan( arma::vec({1, NAN, 3}), arma::vec({-0.2, NAN, NAN}))
     ) << "Expect " << " return of vector with NANs.";
