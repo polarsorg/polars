@@ -43,7 +43,7 @@ jobs:
       - restore_cache:
           name: Restore conan dependencies cache
           keys:
-            - conan-v2-{{ checksum "conan/conanfile.py" }}
+            - conan-v2-{{ checksum "conanfile.py" }}
 
       - run:
           name: Add remotes
