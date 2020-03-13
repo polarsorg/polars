@@ -14,7 +14,7 @@ class PolarsConan(ConanFile):
     }
     default_options = "shared=False", "with_tests=False"
     generators = "cmake"
-    exports_sources = "../*", "!dependencies/*", "!build"
+    exports_sources = "*", "!dependencies/*", "!build", "!source"
     requires = "Armadillo/9.200.1", "date/2.4.1"
 
     def requirements(self):
