@@ -35,6 +35,9 @@
 build/
 cmake-build-*/
 
+# IDE
+.idea/
+
 # python
 .pytest_cache/
 .ipynb_checkpoints/

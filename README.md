@@ -92,6 +92,7 @@ Provides the following methods for a Series:
 * `.to_timeseries_map()`
 * `<<` operator overloading (pretty printing)
 * `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and (approximated) exponential windows
+* `arctan2()` element-wise arc tangent of x1/x2 choosing the quadrant correctly
 
 It also provides a SeriesMask class which is the result of any comparison operation and is used as the input to `.where()`.
 

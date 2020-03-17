@@ -199,5 +199,15 @@ namespace polars {
             }
         }
 
+        arma::vec arctan2(const arma::vec &x, const arma::vec &y) {
+            arma::vec result;
+            result.copy_size(x);
+
+            for(int i=0; i < x.size(); i++){
+                result[i] = atan2(x[i], y[i]);
+            }
+            return result;
+        }
+
     } // namespace numc
 } // namespace polars

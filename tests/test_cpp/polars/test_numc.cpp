@@ -169,3 +169,23 @@ TEST(numc, exponential){
             polars::numc::exponential(5, 3.0, true, 1)
     ) << "Expect " << " symmetric centered array since center = 1 is override";
 }
+
+TEST(numc, arctan2){
+    EXPECT_PRED2(
+            polars::numc::almost_equal_handling_nans,
+            arma::vec({0.12435499454676144,0.24497866312686414,0.49180917598869855}),
+            polars::numc::arctan2({0.25, 0.75, 0.75}, {2., 3., 1.4})
+    ) << "Expect " << " return of standard vector.";
+
+    EXPECT_PRED2(
+            polars::numc::equal_handling_nans,
+            arma::vec({1.4464413322481351, 1.5707963267948966, 0.}),
+            polars::numc::arctan2(arma::vec({2., 3., 0}), arma::vec({0.25, 0., 0.}))
+    ) << "Expect " << " return of standard vector with zeros, due to internal behaviour of arctan2.";
+
+    EXPECT_PRED2(
+            polars::numc::equal_handling_nans,
+            arma::vec({1.7681918866447774, NAN, NAN}),
+            polars::numc::arctan2(arma::vec({1, NAN, 3}), arma::vec({-0.2, NAN, NAN}))
+    ) << "Expect " << " return of vector with NANs.";
+}

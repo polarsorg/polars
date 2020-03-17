@@ -36,6 +36,8 @@ namespace polars {
 
         double quantile(const arma::vec &x, double q);
 
+        arma::vec arctan2(const arma::vec &x, const arma::vec &y);
+
     } // numc
 } // polars
 

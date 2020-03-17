@@ -757,4 +757,15 @@ TEST(Series, rolling_exp_input_correction){
 
 }
 
+TEST(Series, arctan2_regular_case){
+
+    EXPECT_PRED2(
+            Series::almost_equal,
+            Series({0.07677189126977804, 0.5880026035475675, 0.04441521524691084, 0.15534206565122174, 2.214297435588181}, {1, 2, 3, 4, 5}),
+            Series::arctan2(Series({0.1, 0.2, 0.2, 0.83, 0.4}, {1, 2, 3, 4, 5}),
+                            Series({1.3, 0.3, 4.5, 5.3, -0.3}, {1, 2, 3, 4, 5}))
+    ) << "Expect" << " series where each element is the arctan2 of the corresponding series components in x and y.";
+
+}
+
 } // namespace SeriesTests

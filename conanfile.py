@@ -3,7 +3,7 @@ from conans import ConanFile, CMake
 
 class PolarsConan(ConanFile):
     name = "Polars"
-    version = "0.1.0"
+    version = "0.2.0"
     url = "https://github.com/polarsorg/polars"
     license = "MIT License"
     description = "A C++ TimeSeries library that aims to mimic pandas Series"
@@ -14,7 +14,7 @@ class PolarsConan(ConanFile):
     }
     default_options = "shared=False", "with_tests=False"
     generators = "cmake"
-    exports_sources = "../*", "!dependencies/*", "!build"
+    exports_sources = "*", "!dependencies/*", "!build", "!source"
     requires = "Armadillo/9.200.1", "date/2.4.1"
 
     def requirements(self):
