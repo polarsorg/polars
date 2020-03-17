@@ -199,7 +199,7 @@ namespace polars {
             }
         }
 
-        arma::vec arctan(const arma::vec &x, const arma::vec &y) {
+        arma::vec arctan2(const arma::vec &x, const arma::vec &y) {
             arma::vec result;
             result.copy_size(x);
 

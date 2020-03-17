@@ -737,10 +737,10 @@ namespace polars {
         }
     }
 
-    Series Series::arctan(const Series &lhs, const Series &rhs) {
+    Series Series::arctan2(const Series &lhs, const Series &rhs) {
         arma::vec x = lhs.values();
         arma::vec y = rhs.values();
-        arma::vec result = numc::arctan(x, y);
+        arma::vec result = numc::arctan2(x, y);
         return Series(result, lhs.index());
     }
 
