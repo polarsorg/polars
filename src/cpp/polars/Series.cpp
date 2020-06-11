@@ -130,6 +130,10 @@ namespace polars {
         return SeriesMask(values() > (arma::ones(size()) * rhs), index());
     }
 
+    SeriesMask Series::operator<(const double &rhs) const {
+        return SeriesMask(values() < (arma::ones(size()) * rhs), index());
+    }
+
     SeriesMask Series::operator>=(const double &rhs) const {
         return SeriesMask(values() >= (arma::ones(size()) * rhs), index());
     }
@@ -742,6 +746,14 @@ namespace polars {
         arma::vec y = rhs.values();
         arma::vec result = numc::arctan2(x, y);
         return Series(result, lhs.index());
+    }
+
+    Series Series::concat(const Series &lhs, const Series &rhs) {
+        arma::vec expanded_values = lhs.values();
+        arma::vec expanded_indices = lhs.index();
+        expanded_values.insert_rows(lhs.values().size(), rhs.values());
+        expanded_indices.insert_rows(lhs.values().size(), rhs.index());
+        return Series( expanded_values, expanded_indices);
     }
 
     /**
