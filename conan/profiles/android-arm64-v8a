@@ -13,6 +13,7 @@ os.api_level=21
 android_ndk_installer/r20@bincrafters/stable
 
 [options]
+date:use_system_tz_db=True
 
 [env]
 CONAN_CMAKE_TOOLCHAIN_FILE=$PROFILE_DIR/cmake/android.cmake
