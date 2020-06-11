@@ -776,9 +776,34 @@ TEST(Series, arctan2_regular_case){
 
 TEST(Series, concat){
     EXPECT_PRED2(
-            Series::almost_equal,
-            Series({1,2,3,4,5,6},{1,2,3,4,5,6}),
-            Series::concat(Series({1,2,3},{1,2,3}), Series({4,5,6},{4,5,6})));
+        Series::almost_equal,
+        Series({1,2,3,4,5,6},{1,2,3,4,5,6}),
+        Series::concat(Series({1,2,3},{1,2,3}), Series({4,5,6},{4,5,6}))
+    ) << "Expect" << " series become concatenated one to the other.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,NAN,NAN,4,5,6},{1,2,3,4,5,6}),
+        Series::concat(Series({1,NAN,NAN},{1,2,3}), Series({4,5,6},{4,5,6}))
+    ) << "Expect" << " series become concatenated one to the other even with NANs.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,2,3},{1,2,3}),
+        Series::concat(Series({1,2,3},{1,2,3}), Series({},{}))
+    ) << "Expect" << " input series as we are concatenating an empty series.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,2,3},{1,2,3}),
+        Series::concat(Series({},{}), Series({1,2,3},{1,2,3}))
+    ) << "Expect" << " input series as we are concatenating an empty series.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series(),
+        Series::concat(Series(), Series())
+     ) << "Expect" << " an empty series.";
 }
 
 } // namespace SeriesTests

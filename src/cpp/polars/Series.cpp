@@ -753,7 +753,7 @@ namespace polars {
         arma::vec expanded_indices = lhs.index();
         expanded_values.insert_rows(lhs.values().size(), rhs.values());
         expanded_indices.insert_rows(lhs.values().size(), rhs.index());
-        return Series( expanded_values, expanded_indices);
+        return Series(expanded_values, expanded_indices);
     }
 
     /**
