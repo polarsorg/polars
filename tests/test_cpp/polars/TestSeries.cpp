@@ -426,6 +426,12 @@ TEST(Series, operator__lt) {
             Series({0, -1, 3, NAN}, {1, 2, 3, 4}) <= 0,
             polars::SeriesMask({1, 1, 0, 0}, {1, 2, 3, 4})
     ) << "Expect " << "<= should work per item, including NAN != NAN";
+
+    EXPECT_PRED2(
+            polars::SeriesMask::equal,
+            Series({0, -1, 3, NAN}, {1, 2, 3, 4}) < 0,
+            polars::SeriesMask({0, 1, 0, 0}, {1, 2, 3, 4})
+    ) << "Expect " << "< should work per item, including NAN != NAN";
 }
 
 
@@ -766,6 +772,38 @@ TEST(Series, arctan2_regular_case){
                             Series({1.3, 0.3, 4.5, 5.3, -0.3}, {1, 2, 3, 4, 5}))
     ) << "Expect" << " series where each element is the arctan2 of the corresponding series components in x and y.";
 
+}
+
+TEST(Series, concat){
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,2,3,4,5,6},{1,2,3,4,5,6}),
+        Series::concat(Series({1,2,3},{1,2,3}), Series({4,5,6},{4,5,6}))
+    ) << "Expect" << " series become concatenated one to the other.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,NAN,NAN,4,5,6},{1,2,3,4,5,6}),
+        Series::concat(Series({1,NAN,NAN},{1,2,3}), Series({4,5,6},{4,5,6}))
+    ) << "Expect" << " series become concatenated one to the other even with NANs.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,2,3},{1,2,3}),
+        Series::concat(Series({1,2,3},{1,2,3}), Series({},{}))
+    ) << "Expect" << " input series as we are concatenating an empty series.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series({1,2,3},{1,2,3}),
+        Series::concat(Series({},{}), Series({1,2,3},{1,2,3}))
+    ) << "Expect" << " input series as we are concatenating an empty series.";
+
+    EXPECT_PRED2(
+        Series::almost_equal,
+        Series(),
+        Series::concat(Series(), Series())
+     ) << "Expect" << " an empty series.";
 }
 
 } // namespace SeriesTests
