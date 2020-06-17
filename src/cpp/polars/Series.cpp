@@ -303,16 +303,13 @@ namespace polars {
 
     arma::vec calculate_window_weights(
             polars::WindowProcessor::WindowType win_type,
-            arma::uword windowSize,
-            double alpha
+            arma::uword windowSize
     ) {
         switch (win_type) {
             case (polars::WindowProcessor::WindowType::none):
                 return arma::ones(windowSize);
             case (polars::WindowProcessor::WindowType::triang):
                 return polars::numc::triang(windowSize);
-            case (polars::WindowProcessor::WindowType::expn):
-                return reverse(polars::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0));
             default:
                 return arma::ones(windowSize);
         }
@@ -464,7 +461,7 @@ namespace polars {
         return Series(new_values, new_timestamps);
     }
 
-    std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool symmetric, int centerIdx){
+    std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool center, bool symmetric, int centerIdx){
 
 		arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
 
@@ -536,7 +533,9 @@ namespace polars {
 
 		for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
 			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
-			std::tie(leftIdx, rightIdx, weightLeftIdx, weightRightIdx) = get_interval_edges(windowSize, input_idx.size(), false, centerIdx);
+			std::tie(
+					leftIdx, rightIdx, weightLeftIdx, weightRightIdx
+			) = get_interval_edges(windowSize, input_idx.size(), center, false, centerIdx);
 			arma::vec values = input_values.subvec(leftIdx, rightIdx);
 
 			// Define weights vector required for specific windows
@@ -568,7 +567,7 @@ namespace polars {
 // todo; allow passing in transformation function rather than WindowProcessor.
     Series
     Series::rolling(SeriesSize windowSize, const polars::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center, bool symmetric, polars::WindowProcessor::WindowType win_type, double alpha) const {
+                    bool center, bool symmetric, polars::WindowProcessor::WindowType win_type) const {
 
         //assert(center); // todo; implement center:false
         //assert(windowSize > 0);
@@ -576,15 +575,7 @@ namespace polars {
         arma::vec input_values = v;
         arma::vec input_idx = t;
 
-        if(win_type == polars::WindowProcessor::WindowType::expn){
-            Series padded_input = _ewm_input_correction(*this);
-            input_values = padded_input.values();
-            input_idx = padded_input.index();
-
-            // Set window size to be the same as the size of the array
-            windowSize = this->size();
-        } else if((size() > 0 && windowSize > size())) {
-
+        if((size() > 0 && windowSize > size())) {
             // This deals with issues of alignment that arises with non linear windows.
             Series padded_input = _window_size_correction(windowSize, center, *this);
             input_values = padded_input.values();
@@ -595,22 +586,19 @@ namespace polars {
             minPeriods = windowSize;
         }
 
-        arma::uword resultSize = input_values.size();
-        arma::vec resultv(resultSize);
-
-        arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
+        arma::vec resultv(arma::size(input_values));
 
         // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
         for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
 			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
-			std::tie(leftIdx, rightIdx, weightLeftIdx, weightRightIdx) = get_interval_edges(windowSize, input_idx.size(), symmetric, centerIdx);
+			std::tie(
+				leftIdx, rightIdx, weightLeftIdx, weightRightIdx
+			) = get_interval_edges(windowSize, input_idx.size(), center, symmetric, centerIdx);
             arma::vec values = input_values.subvec(leftIdx, rightIdx);
 
             // Define weights vector required for specific windows
-            arma::vec weights;
-            weights.copy_size(values);
-            weights = polars::calculate_window_weights(win_type, windowSize, alpha).subvec(weightLeftIdx,
-                                                                                           weightRightIdx);
+            arma::vec weights(arma::size(values));
+            weights = polars::calculate_window_weights(win_type, windowSize).subvec(weightLeftIdx, weightRightIdx);
 
             const Series subSeries = Series(values, input_idx.subvec(leftIdx, rightIdx));
 
@@ -621,7 +609,7 @@ namespace polars {
             }
         }
 
-        Series result = Series(polars::_ewm_correction(resultv, v, win_type), t);
+        Series result = Series(resultv, t);
 
         if(size() > 0 & windowSize > size()){
             return Series(result.values().head(size()), t);
@@ -635,9 +623,8 @@ namespace polars {
                    SeriesSize minPeriods,
                    bool center,
                    bool symmetric,
-                   polars::WindowProcessor::WindowType win_type,
-                   double alpha) const {
-        return Window((*this), windowSize, minPeriods, center, symmetric, win_type, alpha);
+                   polars::WindowProcessor::WindowType win_type) const {
+        return Window((*this), windowSize, minPeriods, center, symmetric, win_type);
     };
 
     Rolling Series::rolling(SeriesSize windowSize,
