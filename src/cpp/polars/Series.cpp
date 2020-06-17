@@ -24,443 +24,444 @@
 
 namespace polars {
 
-    using SeriesMask = polars::SeriesMask;
 
-    Series::Series() = default;
+	using SeriesMask = polars::SeriesMask;
+
+	Series::Series() = default;
 
 
 // todo; check for 1-D series & that the lengths match
-    Series::Series(const arma::vec &v, const arma::vec &t) : t(t), v(v) {
-        //assert(t.n_cols == 1 && v.n_cols == 1);
-        //assert(t.n_rows == v.n_rows);
-    };
+	Series::Series(const arma::vec &v, const arma::vec &t) : t(t), v(v) {
+		//assert(t.n_cols == 1 && v.n_cols == 1);
+		//assert(t.n_rows == v.n_rows);
+	};
 
-    /**
-     * Converting constructor - this takes a SeriesMask and creates a Series from it.
-     *
-     * This is intentionally implicit (not marked explicit) so that a function expecting a Series can be passed a
-     * SeriesMask and it will be automatically converted since this is a loss-less process.
-     */
-    Series::Series(const SeriesMask &sm) : t(sm.index()), v(arma::conv_to<arma::vec>::from(sm.values())) {}
+	/**
+	 * Converting constructor - this takes a SeriesMask and creates a Series from it.
+	 *
+	 * This is intentionally implicit (not marked explicit) so that a function expecting a Series can be passed a
+	 * SeriesMask and it will be automatically converted since this is a loss-less process.
+	 */
+	Series::Series(const SeriesMask &sm) : t(sm.index()), v(arma::conv_to<arma::vec>::from(sm.values())) {}
 
-    Series Series::from_vect(const std::vector<double> &t_v, const std::vector<double> &v_v) {
-        return Series(arma::conv_to<arma::vec>::from(v_v), arma::conv_to<arma::vec>::from(t_v));
-    }
+	Series Series::from_vect(const std::vector<double> &t_v, const std::vector<double> &v_v) {
+		return Series(arma::conv_to<arma::vec>::from(v_v), arma::conv_to<arma::vec>::from(t_v));
+	}
 
-    Series Series::from_map(const std::map<double, double> &iv_map) {
-        arma::vec index(iv_map.size());
-        arma::vec values(iv_map.size());
-        int i = 0;
-        for (auto& pair : iv_map) {
-            index[i] = pair.first;
-            values[i] = pair.second;
-            ++i;
-        }
-        return {values, index};
-    }
+	Series Series::from_map(const std::map<double, double> &iv_map) {
+		arma::vec index(iv_map.size());
+		arma::vec values(iv_map.size());
+		int i = 0;
+		for (auto& pair : iv_map) {
+			index[i] = pair.first;
+			values[i] = pair.second;
+			++i;
+		}
+		return {values, index};
+	}
 
 
 // Series [op] int methods
-    SeriesMask Series::operator==(const int rhs) const {
-        arma::vec rhs_vec = arma::ones(this->size()) * rhs;
-        arma::vec abs_diff = arma::abs(values() - rhs_vec);
-        // We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
-        double threshold = 1E-50;
-        return SeriesMask(abs_diff < threshold, index());
-    }
+	SeriesMask Series::operator==(const int rhs) const {
+		arma::vec rhs_vec = arma::ones(this->size()) * rhs;
+		arma::vec abs_diff = arma::abs(values() - rhs_vec);
+		// We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
+		double threshold = 1E-50;
+		return SeriesMask(abs_diff < threshold, index());
+	}
 
 
-    SeriesMask Series::operator!=(const int rhs) const {  // TODO implement as negation of operator==
-        arma::vec rhs_vec = arma::ones(this->size()) * rhs;
-        arma::vec abs_diff = arma::abs(values() - rhs_vec);
-        // We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
-        double threshold = 1E-50;
-        return SeriesMask(abs_diff > threshold, index());
-    }
+	SeriesMask Series::operator!=(const int rhs) const {  // TODO implement as negation of operator==
+		arma::vec rhs_vec = arma::ones(this->size()) * rhs;
+		arma::vec abs_diff = arma::abs(values() - rhs_vec);
+		// We can't use a large difference test like .1 despite the rhs is an int since the lhs is double so could be close.
+		double threshold = 1E-50;
+		return SeriesMask(abs_diff > threshold, index());
+	}
 
 
-    // Series [op] Series methods
-    SeriesMask Series::operator==(const Series &rhs) const {
-        // TODO: make this fast enough to always check at runtime
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return SeriesMask(values() == rhs.values(), index());
-    }
+	// Series [op] Series methods
+	SeriesMask Series::operator==(const Series &rhs) const {
+		// TODO: make this fast enough to always check at runtime
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return SeriesMask(values() == rhs.values(), index());
+	}
 
 
-    SeriesMask Series::operator!=(const Series &rhs) const {
-        // TODO: make this fast enough to always check at runtime
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return SeriesMask(values() != rhs.values(), index());
-    }
+	SeriesMask Series::operator!=(const Series &rhs) const {
+		// TODO: make this fast enough to always check at runtime
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return SeriesMask(values() != rhs.values(), index());
+	}
 
 
-    SeriesMask Series::operator>(const Series &rhs) const {
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return SeriesMask(values() > rhs.values(), index());
-    }
+	SeriesMask Series::operator>(const Series &rhs) const {
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return SeriesMask(values() > rhs.values(), index());
+	}
 
 
-    SeriesMask Series::operator<(const Series &rhs) const {
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return polars::SeriesMask(values() < rhs.values(), index());
-    }
+	SeriesMask Series::operator<(const Series &rhs) const {
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return polars::SeriesMask(values() < rhs.values(), index());
+	}
 
 
-    Series Series::operator+(const Series &rhs) const {
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return polars::Series(values() + rhs.values(), index());
-    }
+	Series Series::operator+(const Series &rhs) const {
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return polars::Series(values() + rhs.values(), index());
+	}
 
 
-    Series Series::operator-(const Series &rhs) const {
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return polars::Series(values() - rhs.values(), index());
-    }
+	Series Series::operator-(const Series &rhs) const {
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return polars::Series(values() - rhs.values(), index());
+	}
 
 
-    Series Series::operator*(const Series &rhs) const {
-        //assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
-        return polars::Series(values() % rhs.values(), index());
-    }
+	Series Series::operator*(const Series &rhs) const {
+		//assert(!arma::any(index() != rhs.index()));  // Use not any != to handle empty array case
+		return polars::Series(values() % rhs.values(), index());
+	}
 
 
 // Series [op] double methods
-    SeriesMask Series::operator>(const double &rhs) const {
-        return SeriesMask(values() > (arma::ones(size()) * rhs), index());
-    }
+	SeriesMask Series::operator>(const double &rhs) const {
+		return SeriesMask(values() > (arma::ones(size()) * rhs), index());
+	}
 
-    SeriesMask Series::operator<(const double &rhs) const {
-        return SeriesMask(values() < (arma::ones(size()) * rhs), index());
-    }
+	SeriesMask Series::operator<(const double &rhs) const {
+		return SeriesMask(values() < (arma::ones(size()) * rhs), index());
+	}
 
-    SeriesMask Series::operator>=(const double &rhs) const {
-        return SeriesMask(values() >= (arma::ones(size()) * rhs), index());
-    }
+	SeriesMask Series::operator>=(const double &rhs) const {
+		return SeriesMask(values() >= (arma::ones(size()) * rhs), index());
+	}
 
-    SeriesMask Series::operator<=(const double &rhs) const {
-        return SeriesMask(values() <= (arma::ones(size()) * rhs), index());
-    }
+	SeriesMask Series::operator<=(const double &rhs) const {
+		return SeriesMask(values() <= (arma::ones(size()) * rhs), index());
+	}
 
-    Series Series::operator+(const double &rhs) const {
-        return Series(values() + rhs, index());
-    }
-
-
-    Series Series::operator-(const double &rhs) const {
-        return Series(values() - rhs, index());
-    }
+	Series Series::operator+(const double &rhs) const {
+		return Series(values() + rhs, index());
+	}
 
 
-    Series Series::operator*(const double &rhs) const {
-        return Series(values() * rhs, index());
-    }
+	Series Series::operator-(const double &rhs) const {
+		return Series(values() - rhs, index());
+	}
 
 
-// todo; do we need a flavor that *doesn't* take account of NANs?
-    bool Series::equals(const Series &rhs) const {
-        if ((index().n_rows != rhs.index().n_rows)) return false;
-        if ((index().n_cols != rhs.index().n_cols)) return false;
-        if (!polars::numc::equal_handling_nans(values(), rhs.values())) return false;
-        if (any(index() != rhs.index())) return false;
-        return true;
-    }
+	Series Series::operator*(const double &rhs) const {
+		return Series(values() * rhs, index());
+	}
 
 
 // todo; do we need a flavor that *doesn't* take account of NANs?
-    bool Series::almost_equals(const Series &rhs) const {
-        if ((index().n_rows != rhs.index().n_rows)) return false;
-        if ((index().n_cols != rhs.index().n_cols)) return false;
-        if (!polars::numc::almost_equal_handling_nans(values(), rhs.values())) return false;
-        if (any(index() != rhs.index())) return false;
-        return true;
-    }
+	bool Series::equals(const Series &rhs) const {
+		if ((index().n_rows != rhs.index().n_rows)) return false;
+		if ((index().n_cols != rhs.index().n_cols)) return false;
+		if (!polars::numc::equal_handling_nans(values(), rhs.values())) return false;
+		if (any(index() != rhs.index())) return false;
+		return true;
+	}
+
+
+// todo; do we need a flavor that *doesn't* take account of NANs?
+	bool Series::almost_equals(const Series &rhs) const {
+		if ((index().n_rows != rhs.index().n_rows)) return false;
+		if ((index().n_cols != rhs.index().n_cols)) return false;
+		if (!polars::numc::almost_equal_handling_nans(values(), rhs.values())) return false;
+		if (any(index() != rhs.index())) return false;
+		return true;
+	}
 
 // Location.
 
-    Series Series::iloc(int from, int to, int step) const {
+	Series Series::iloc(int from, int to, int step) const {
 
-        if(empty() || (from == to)){
-            return Series();
-        }
+		if(empty() || (from == to)){
+			return Series();
+		}
 
-        arma::uvec pos;
-        int effective_from;
-        int effective_to;
+		arma::uvec pos;
+		int effective_from;
+		int effective_to;
 
-        if(from < 0){
-            effective_from = values().size() + from;
-        } else {
-            effective_from = from;
-        }
+		if(from < 0){
+			effective_from = values().size() + from;
+		} else {
+			effective_from = from;
+		}
 
-        if(to < 0){
-            effective_to = values().size() + to - 1;
-        } else if(to == 0) {
-            effective_to = to;
-        } else {
-            effective_to = to - 1;
-        }
+		if(to < 0){
+			effective_to = values().size() + to - 1;
+		} else if(to == 0) {
+			effective_to = to;
+		} else {
+			effective_to = to - 1;
+		}
 
-        pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
+		pos = arma::regspace<arma::uvec>(effective_from,  step,  effective_to);
 
-        if(pos.size() > size()){
-            pos = pos.subvec(0, size() - 1);
-        }
+		if(pos.size() > size()){
+			pos = pos.subvec(0, size() - 1);
+		}
 
-        return Series(values().elem(pos),index().elem(pos));
-    }
+		return Series(values().elem(pos),index().elem(pos));
+	}
 
-    // TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
-    Series Series::iloc(const arma::uvec &pos) const {
-        return Series(values().elem(pos), index().elem(pos));
-    }
+	// TODO: Add slicing logic of the form .iloc(int start, int stop, int step=1) so it can be called like ser.iloc(0, -10).
+	Series Series::iloc(const arma::uvec &pos) const {
+		return Series(values().elem(pos), index().elem(pos));
+	}
 
 
-    double Series::iloc(arma::uword pos) const {
-        arma::vec val = values().elem(arma::uvec{pos});
-        return val[0];
-    }
+	double Series::iloc(arma::uword pos) const {
+		arma::vec val = values().elem(arma::uvec{pos});
+		return val[0];
+	}
 
 // by label of indices
-    Series Series::loc(const arma::vec &index_labels) const {
+	Series Series::loc(const arma::vec &index_labels) const {
 
-        std::vector<int> indices;
+		std::vector<int> indices;
 
-        for (int j = 0; j < index_labels.n_elem; j++) {
+		for (int j = 0; j < index_labels.n_elem; j++) {
 
-            arma::uvec idx = arma::find(index() == index_labels[j]);
+			arma::uvec idx = arma::find(index() == index_labels[j]);
 
-            if (!idx.empty()) {
-                indices.push_back(idx[0]);
-            }
-        }
+			if (!idx.empty()) {
+				indices.push_back(idx[0]);
+			}
+		}
 
-        if (indices.empty()) {
-            return Series();
-        } else {
-            arma::uvec indices_v = arma::conv_to<arma::uvec>::from(indices);
-            return Series(values().elem(indices_v), index().elem(indices_v));
-        }
-    }
+		if (indices.empty()) {
+			return Series();
+		} else {
+			arma::uvec indices_v = arma::conv_to<arma::uvec>::from(indices);
+			return Series(values().elem(indices_v), index().elem(indices_v));
+		}
+	}
 
-    Series Series::loc(arma::uword pos) const {
-        arma::uvec idx = arma::find(index() == pos);
+	Series Series::loc(arma::uword pos) const {
+		arma::uvec idx = arma::find(index() == pos);
 
-        if (!idx.empty()) {
-            return Series(values(), index()).iloc(idx);
-        } else {
-            return Series();
-        }
-    }
+		if (!idx.empty()) {
+			return Series(values(), index()).iloc(idx);
+		} else {
+			return Series();
+		}
+	}
 
-    Series Series::where(const SeriesMask &condition, double other) const {
-        arma::vec result = values();
-        result.elem(find((!condition).values())).fill(other);
-        return Series(result, index());
-    }
-
-
-    Series Series::diff() const {
-
-        arma::uword resultSize = values().size();
-
-        arma::vec resultv(resultSize);
-
-        double previousValue = NAN;
-        for (arma::uword idx = 0; idx < resultSize; idx++) {
-            resultv[idx] = values()[idx] - previousValue;
-            previousValue = values()[idx];
-        }
-
-        return Series(resultv, index());
-    }
+	Series Series::where(const SeriesMask &condition, double other) const {
+		arma::vec result = values();
+		result.elem(find((!condition).values())).fill(other);
+		return Series(result, index());
+	}
 
 
-    Series Series::abs() const {
-        return Series(arma::abs(values()), index());
-    }
+	Series Series::diff() const {
 
-    double Series::quantile(double q) const {
-        return polars::numc::quantile(values(), q);
-    }
+		arma::uword resultSize = values().size();
 
-    Series Series::fillna(double value) const {
-        arma::vec vals = values();
-        vals.replace(arma::datum::nan, value);
-        return Series(vals, index());
-    }
+		arma::vec resultv(resultSize);
 
-    Series Series::dropna() const {
-        // Get indices of finite elements
-        arma::uvec indices = arma::sort(arma::join_cols(
-                arma::find_finite(values()),
-                arma::find(arma::abs(values()) == arma::datum::inf))
-        );
-        return Series(values().elem(indices), index().elem(indices));
-    }
+		double previousValue = NAN;
+		for (arma::uword idx = 0; idx < resultSize; idx++) {
+			resultv[idx] = values()[idx] - previousValue;
+			previousValue = values()[idx];
+		}
+
+		return Series(resultv, index());
+	}
 
 
-    arma::vec calculate_window_weights(
-            polars::WindowProcessor::WindowType win_type,
-            arma::uword windowSize
-    ) {
-        switch (win_type) {
-            case (polars::WindowProcessor::WindowType::none):
-                return arma::ones(windowSize);
-            case (polars::WindowProcessor::WindowType::triang):
-                return polars::numc::triang(windowSize);
-            default:
-                return arma::ones(windowSize);
-        }
-    }
+	Series Series::abs() const {
+		return Series(arma::abs(values()), index());
+	}
 
-    // TODO: This method needs to be re-factored.
-    arma::vec _ewm_correction(const arma::vec &results, const arma::vec &vals,
-                                      polars::WindowProcessor::WindowType win_type) {
-        /* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
-         * of rolling method hereby implemented.
-         * This matches pandas ewm for its default case */
+	double Series::quantile(double q) const {
+		return polars::numc::quantile(values(), q);
+	}
 
-        arma::uvec res_fin = arma::find_finite(results);
+	Series Series::fillna(double value) const {
+		arma::vec vals = values();
+		vals.replace(arma::datum::nan, value);
+		return Series(vals, index());
+	}
 
-        if (results.empty() || res_fin.empty()){
-            arma::vec effective_results(vals.size());
-            effective_results.fill(NAN);
-            return effective_results;
-        }
+	Series Series::dropna() const {
+		// Get indices of finite elements
+		arma::uvec indices = arma::sort(arma::join_cols(
+				arma::find_finite(values()),
+				arma::find(arma::abs(values()) == arma::datum::inf))
+		);
+		return Series(values().elem(indices), index().elem(indices));
+	}
 
-        if (win_type == polars::WindowProcessor::WindowType::expn) {
-            // Correction to match pandas ewm - shift by one.
-            arma::vec effective_results = results;
-            arma::vec results_ewm;
-            int missing_initial_nans =  0;
 
-            // Check if it was a case of originally front NANs - no added padding
-            arma::uvec finite_values_idx = arma::find_finite(vals);
-            if(finite_values_idx[0] != 0){
-                // we had originally some NANs.
-                missing_initial_nans = finite_values_idx[0];
-            }
+	arma::vec calculate_window_weights(
+			polars::WindowProcessor::WindowType win_type,
+			arma::uword windowSize
+	) {
+		switch (win_type) {
+			case (polars::WindowProcessor::WindowType::none):
+				return arma::ones(windowSize);
+			case (polars::WindowProcessor::WindowType::triang):
+				return polars::numc::triang(windowSize);
+			default:
+				return arma::ones(windowSize);
+		}
+	}
 
-            arma::vec effective_vals = vals.subvec(missing_initial_nans, vals.size() - 1);
+	// TODO: This method needs to be re-factored.
+	arma::vec _ewm_correction(const arma::vec &results, const arma::vec &vals,
+							  polars::WindowProcessor::WindowType win_type) {
+		/* Method that shifts result from rolling average with exp window so it yields correct normalisation and allows usage
+		 * of rolling method hereby implemented.
+		 * This matches pandas ewm for its default case */
 
-            // For the cases in which window_size < size we need to correct
-            if( (results.size() > effective_vals.size())){
-                effective_results = effective_results.elem( arma::find_finite(effective_results) );
-                effective_results = effective_results.head(effective_vals.size());
-            }
+		arma::uvec res_fin = arma::find_finite(results);
 
-            if ( effective_results.at(0) == effective_vals[0] ){
-                // difference of 1 for center = False.
-                results_ewm = effective_results;
-            } else {
-                results_ewm.copy_size(effective_results) ;
-                results_ewm.at(0) = vals[0];
+		if (results.empty() || res_fin.empty()){
+			arma::vec effective_results(vals.size());
+			effective_results.fill(NAN);
+			return effective_results;
+		}
 
-                for (int j = 1; j < results_ewm.n_elem; j++) {
-                    results_ewm[j] = effective_results[j - 1];
-                }
-            }
+		if (win_type == polars::WindowProcessor::WindowType::expn) {
+			// Correction to match pandas ewm - shift by one.
+			arma::vec effective_results = results;
+			arma::vec results_ewm;
+			int missing_initial_nans =  0;
 
-            if(missing_initial_nans > 0){
-                auto added_nans = vals.size() - results_ewm.size();
-                arma::vec pn(added_nans);
-                pn.fill(NAN);
-                return arma::join_cols(pn, results_ewm);
-            } else {
-                return results_ewm;
-            }
+			// Check if it was a case of originally front NANs - no added padding
+			arma::uvec finite_values_idx = arma::find_finite(vals);
+			if(finite_values_idx[0] != 0){
+				// we had originally some NANs.
+				missing_initial_nans = finite_values_idx[0];
+			}
 
-        } else {
-            return results;
-        }
-    }
+			arma::vec effective_vals = vals.subvec(missing_initial_nans, vals.size() - 1);
 
-    // TODO: Combine cases here with those in input for exponential case.
-    polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input){
-        // This is required because of relative size of window size vs array size.
+			// For the cases in which window_size < size we need to correct
+			if( (results.size() > effective_vals.size())){
+				effective_results = effective_results.elem( arma::find_finite(effective_results) );
+				effective_results = effective_results.head(effective_vals.size());
+			}
 
-        if(input.size() == 1){
-            return input;
-        }
+			if ( effective_results.at(0) == effective_vals[0] ){
+				// difference of 1 for center = False.
+				results_ewm = effective_results;
+			} else {
+				results_ewm.copy_size(effective_results) ;
+				results_ewm.at(0) = vals[0];
 
-        auto n = window_size / 2;
-        if(input.size() % 2 == 0){ n = n - 1; };
+				for (int j = 1; j < results_ewm.n_elem; j++) {
+					results_ewm[j] = effective_results[j - 1];
+				}
+			}
 
-        // Get index delta
-        auto ts = input.index();
-        double delta = std::ceil(std::abs(ts(1) -  ts(0)));
+			if(missing_initial_nans > 0){
+				auto added_nans = vals.size() - results_ewm.size();
+				arma::vec pn(added_nans);
+				pn.fill(NAN);
+				return arma::join_cols(pn, results_ewm);
+			} else {
+				return results_ewm;
+			}
 
-        // Vector with n nans
-        arma::vec multi_nan(n);
-        multi_nan.fill(NAN);
+		} else {
+			return results;
+		}
+	}
 
-        // Vector with single nan
-        arma::vec single_nan(1);
-        single_nan.fill(NAN);
+	// TODO: Combine cases here with those in input for exponential case.
+	polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input){
+		// This is required because of relative size of window size vs array size.
 
-        // Base case is padding goes to the right
-        arma::vec new_input = arma::join_cols(input.values(),  multi_nan);
+		if(input.size() == 1){
+			return input;
+		}
 
-        auto start_idx = ts(0);
-        auto end_idx = ts(ts.size()-1) + n * delta;
-        auto effective_size = n + input.size();
+		auto n = window_size / 2;
+		if(input.size() % 2 == 0){ n = n - 1; };
 
-        if (center == false){
+		// Get index delta
+		auto ts = input.index();
+		double delta = std::ceil(std::abs(ts(1) -  ts(0)));
 
-            if( window_size > input.size() + 1 ){
-                new_input = arma::join_cols(multi_nan, input.values());
-                start_idx = start_idx - n * delta;
-                end_idx = end_idx - n * delta;
-            } else if (n == 1) {
-                new_input = arma::join_cols(single_nan, arma::join_cols(single_nan, input.values()));
-                start_idx = start_idx - 2 * delta;
-                end_idx = end_idx - delta;
+		// Vector with n nans
+		arma::vec multi_nan(n);
+		multi_nan.fill(NAN);
 
-                effective_size = effective_size + 1;
-            } else if (n == 2) {
-                new_input = arma::join_cols(single_nan, arma::join_cols(input.values(), single_nan));
-                start_idx = start_idx - delta;
-                end_idx = end_idx - delta;
-            }
-        }
+		// Vector with single nan
+		arma::vec single_nan(1);
+		single_nan.fill(NAN);
 
-        arma::vec new_timestamps = arma::linspace(start_idx, end_idx, effective_size);
+		// Base case is padding goes to the right
+		arma::vec new_input = arma::join_cols(input.values(),  multi_nan);
 
-        return Series(new_input, new_timestamps);
-    }
+		auto start_idx = ts(0);
+		auto end_idx = ts(ts.size()-1) + n * delta;
+		auto effective_size = n + input.size();
 
-    // TODO: Refactor this method and combine with window_size_correction since similar logic
-    polars::Series _ewm_input_correction(const polars::Series &input){
-        // only gets called when window_size < input.size() and we have win_type = expn
-        Series new_input = input;
+		if (center == false){
 
-        if(input.empty() || input.dropna().empty()){
-            return input;
-        }
+			if( window_size > input.size() + 1 ){
+				new_input = arma::join_cols(multi_nan, input.values());
+				start_idx = start_idx - n * delta;
+				end_idx = end_idx - n * delta;
+			} else if (n == 1) {
+				new_input = arma::join_cols(single_nan, arma::join_cols(single_nan, input.values()));
+				start_idx = start_idx - 2 * delta;
+				end_idx = end_idx - delta;
 
-        // remove front NANs
-        if(std::isnan(input.values()(0))){
-            arma::uvec finite_input_idx = arma::find_finite(input.values());
-            auto number_of_nans = finite_input_idx(0);
-            new_input = input.iloc(number_of_nans, input.size());
-        }
+				effective_size = effective_size + 1;
+			} else if (n == 2) {
+				new_input = arma::join_cols(single_nan, arma::join_cols(input.values(), single_nan));
+				start_idx = start_idx - delta;
+				end_idx = end_idx - delta;
+			}
+		}
 
-        arma::vec v(new_input.size());
-        v.fill(NAN);
-        arma::vec new_values = arma::join_cols(v, new_input.values());
+		arma::vec new_timestamps = arma::linspace(start_idx, end_idx, effective_size);
 
-        // Get new timestamps
-        auto ts = new_input.index();
-        auto delta = std::ceil(std::abs(input.index()(1) -  input.index()(0))); // use original input
+		return Series(new_input, new_timestamps);
+	}
 
-        auto new_index_0 = ts(0) - new_input.size() * delta;
-        arma::vec new_timestamps = arma::linspace(new_index_0, ts(ts.size()-1), 2 * new_input.size());
+	// TODO: Refactor this method and combine with window_size_correction since similar logic
+	polars::Series _ewm_input_correction(const polars::Series &input){
+		// only gets called when window_size < input.size() and we have win_type = expn
+		Series new_input = input;
 
-        return Series(new_values, new_timestamps);
-    }
+		if(input.empty() || input.dropna().empty()){
+			return input;
+		}
 
-    std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool center, bool symmetric, int centerIdx){
+		// remove front NANs
+		if(std::isnan(input.values()(0))){
+			arma::uvec finite_input_idx = arma::find_finite(input.values());
+			auto number_of_nans = finite_input_idx(0);
+			new_input = input.iloc(number_of_nans, input.size());
+		}
+
+		arma::vec v(new_input.size());
+		v.fill(NAN);
+		arma::vec new_values = arma::join_cols(v, new_input.values());
+
+		// Get new timestamps
+		auto ts = new_input.index();
+		auto delta = std::ceil(std::abs(input.index()(1) -  input.index()(0))); // use original input
+
+		auto new_index_0 = ts(0) - new_input.size() * delta;
+		arma::vec new_timestamps = arma::linspace(new_index_0, ts(ts.size()-1), 2 * new_input.size());
+
+		return Series(new_values, new_timestamps);
+	}
+
+	std::tuple<int, int, int, int> _get_interval_edges(int windowSize, int inputSize, bool symmetric, int centerIdx) {
 
 		arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
 
@@ -510,10 +511,24 @@ namespace polars {
 			}
 		}
 		return {leftIdx, rightIdx, weightLeftIdx, weightRightIdx};
-    }
+	}
 
-    Series
-    Series::ewm(SeriesSize windowSize, SeriesSize minPeriods, bool center, double alpha) const {
+	Series _align_to_left(Series input, int windowSize) {
+		// Only need to realign for center=False and windowSize > input.size()
+		arma::vec moved_values = arma::zeros(windowSize - 1) * NAN;
+
+		auto ceil_half = std::ceil((windowSize-1.0)/2.0);
+		auto rolling_start_idx = ceil_half;
+		auto rolling_end_idx = input.size() - (windowSize - ceil_half);
+
+		arma::vec rolling_values = input.values().subvec(rolling_start_idx, rolling_end_idx);
+		moved_values.insert_rows(windowSize-1, rolling_values);
+		return polars::Series(moved_values, input.index());
+
+	};
+
+	Series
+	Series::ewm(SeriesSize windowSize, SeriesSize minPeriods, bool center, double alpha) const {
 		arma::vec input_values = v;
 		arma::vec input_idx = t;
 
@@ -534,12 +549,12 @@ namespace polars {
 			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
 			std::tie(
 					leftIdx, rightIdx, weightLeftIdx, weightRightIdx
-			) = get_interval_edges(windowSize, input_idx.size(), center, false, centerIdx);
+			) = _get_interval_edges(windowSize, input_idx.size(), false, centerIdx);
 			arma::vec values = input_values.subvec(leftIdx, rightIdx);
 
 			// Define weights vector required for specific windows
 			arma::vec exponential_weights = reverse(
-				polars::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0)
+					polars::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0)
 			);
 			arma::vec weights(arma::size(values));
 			weights = exponential_weights.subvec(weightLeftIdx, weightRightIdx);
@@ -554,262 +569,264 @@ namespace polars {
 		}
 
 		Series result = Series(
-			polars::_ewm_correction(resultv, v, polars::WindowProcessor::WindowType::expn), t);
+				polars::_ewm_correction(resultv, v, polars::WindowProcessor::WindowType::expn), t);
 
 		if(size() > 0 & windowSize > size()){
 			return Series(result.values().head(size()), t);
 		} else {
 			return result;
 		}
-    }
+	}
 
 // todo; allow passing in transformation function rather than WindowProcessor.
-    Series
-    Series::rolling(SeriesSize windowSize, const polars::WindowProcessor &processor, SeriesSize minPeriods,
-                    bool center, bool symmetric, polars::WindowProcessor::WindowType win_type) const {
+	Series
+	Series::rolling(SeriesSize windowSize, const polars::WindowProcessor &processor, SeriesSize minPeriods,
+					bool center, bool symmetric, polars::WindowProcessor::WindowType win_type) const {
 
-        //assert(center); // todo; implement center:false
-        //assert(windowSize > 0);
-        //assert(windowSize % 2 == 0); // TODO: Make symmetric = true work for even windows. See tests for reference.
-        arma::vec input_values = v;
-        arma::vec input_idx = t;
+		//assert(center); // todo; implement center:false
+		//assert(windowSize > 0);
+		//assert(windowSize % 2 == 0); // TODO: Make symmetric = true work for even windows. See tests for reference.
+		arma::vec input_values = v;
+		arma::vec input_idx = t;
 
-        if((size() > 0 && windowSize > size())) {
-            // This deals with issues of alignment that arises with non linear windows.
-            Series padded_input = _window_size_correction(windowSize, center, *this);
-            input_values = padded_input.values();
-            input_idx = padded_input.index();
-        }
+		if((size() > 0 && windowSize > size())) {
+			// This deals with issues of alignment that arises with non linear windows.
+			Series padded_input = _window_size_correction(windowSize, center, *this);
+			input_values = padded_input.values();
+			input_idx = padded_input.index();
+		}
 
-        if (minPeriods == 0) {
-            minPeriods = windowSize;
-        }
+		if (minPeriods == 0) {
+			minPeriods = windowSize;
+		}
 
-        arma::vec resultv(arma::size(input_values));
+		arma::vec resultv(arma::size(input_values));
 
-        // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
-        for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
+		// roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
+		for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
 			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
 			std::tie(
-				leftIdx, rightIdx, weightLeftIdx, weightRightIdx
-			) = get_interval_edges(windowSize, input_idx.size(), center, symmetric, centerIdx);
-            arma::vec values = input_values.subvec(leftIdx, rightIdx);
+					leftIdx, rightIdx, weightLeftIdx, weightRightIdx
+			) = _get_interval_edges(windowSize, input_idx.size(), symmetric, centerIdx);
+			arma::vec values = input_values.subvec(leftIdx, rightIdx);
+			// Define weights vector required for specific windows
+			arma::vec weights(arma::size(values));
+			weights = polars::calculate_window_weights(win_type, windowSize).subvec(weightLeftIdx, weightRightIdx);
 
-            // Define weights vector required for specific windows
-            arma::vec weights(arma::size(values));
-            weights = polars::calculate_window_weights(win_type, windowSize).subvec(weightLeftIdx, weightRightIdx);
+			const Series subSeries = Series(values, input_idx.subvec(leftIdx, rightIdx));
 
-            const Series subSeries = Series(values, input_idx.subvec(leftIdx, rightIdx));
+			if ( subSeries.finiteSize() >= minPeriods) {
+				resultv(centerIdx) = processor.processWindow(subSeries, weights);
+			} else {
+				resultv(centerIdx) = processor.defaultValue();
+			}
+		}
 
-            if (subSeries.finiteSize() >= minPeriods) {
-                resultv(centerIdx) = processor.processWindow(subSeries, weights);
-            } else {
-                resultv(centerIdx) = processor.defaultValue();
-            }
-        }
+		Series result = Series(resultv, t);
 
-        Series result = Series(resultv, t);
+		if(size() > 0 & windowSize > size()){
+			return Series(result.values().head(size()), t);
+		} else {
+			if( (center == true) || (windowSize <= 2) ){
+				return result;
+			} else {
+				return _align_to_left(result, windowSize);
+			}
+		}
+	}
 
-        if(size() > 0 & windowSize > size()){
-            return Series(result.values().head(size()), t);
-        } else {
-            return result;
-        }
-        //return result;
-    }
+	Window Series::rolling(SeriesSize windowSize,
+						   SeriesSize minPeriods,
+						   bool center,
+						   bool symmetric,
+						   polars::WindowProcessor::WindowType win_type) const {
+		return Window((*this), windowSize, minPeriods, center, symmetric, win_type);
+	};
 
-    Window Series::rolling(SeriesSize windowSize,
-                   SeriesSize minPeriods,
-                   bool center,
-                   bool symmetric,
-                   polars::WindowProcessor::WindowType win_type) const {
-        return Window((*this), windowSize, minPeriods, center, symmetric, win_type);
-    };
-
-    Rolling Series::rolling(SeriesSize windowSize,
-                    SeriesSize minPeriods,
-                    bool center,
-                    bool symmetric) const {
-        return Rolling((*this), windowSize, minPeriods, center, symmetric);
-    };
-
-
-    Series Series::clip(double lower_limit, double upper_limit) const {
-        SeriesMask upper = SeriesMask(values() < upper_limit, index());
-        SeriesMask lower = SeriesMask(values() > lower_limit, index());
-        return Series(values(), index()).where(upper, upper_limit).where(lower, lower_limit);
-    };
+	Rolling Series::rolling(SeriesSize windowSize,
+							SeriesSize minPeriods,
+							bool center,
+							bool symmetric) const {
+		return Rolling((*this), windowSize, minPeriods, center, symmetric);
+	};
 
 
-    Series Series::pow(double power) const {
-        return Series(arma::pow(values(), power), index());
-    }
+	Series Series::clip(double lower_limit, double upper_limit) const {
+		SeriesMask upper = SeriesMask(values() < upper_limit, index());
+		SeriesMask lower = SeriesMask(values() > lower_limit, index());
+		return Series(values(), index()).where(upper, upper_limit).where(lower, lower_limit);
+	};
 
 
-    int Series::count() const {
-        return finiteSize();
-    }
+	Series Series::pow(double power) const {
+		return Series(arma::pow(values(), power), index());
+	}
 
 
-    double Series::sum() const {
-        arma::vec finites = finiteValues();
-        if (finites.size() == 0) {
-            return NAN;
-        } else {
-            return arma::sum(finites);
-        }
-    }
+	int Series::count() const {
+		return finiteSize();
+	}
 
 
-    double Series::mean() const {
-        arma::vec finites = finiteValues();
-        if (finites.size() == 0) {
-            return NAN;
-        } else {
-            return arma::mean(finites);
-        }
-    }
+	double Series::sum() const {
+		arma::vec finites = finiteValues();
+		if (finites.size() == 0) {
+			return NAN;
+		} else {
+			return arma::sum(finites);
+		}
+	}
 
 
-    double Series::std(int ddof) const {
-        arma::vec finites = finiteValues();
-        if (ddof < 0) {
-            ddof = 0;
-        }
-        auto n = finites.size();
-        if (n <= ddof) {
-            return NAN;
-        } else {
-            auto dev = (*this) - this->mean();
-            auto squared_deviation = dev.pow(2);
-            return std::pow(squared_deviation.sum() / (n - ddof), 0.5);
-        }
-    }
+	double Series::mean() const {
+		arma::vec finites = finiteValues();
+		if (finites.size() == 0) {
+			return NAN;
+		} else {
+			return arma::mean(finites);
+		}
+	}
 
 
-    Series::SeriesSize Series::size() const {
-        //assert(index().size() == values().size());
-        return index().size();
-    }
+	double Series::std(int ddof) const {
+		arma::vec finites = finiteValues();
+		if (ddof < 0) {
+			ddof = 0;
+		}
+		auto n = finites.size();
+		if (n <= ddof) {
+			return NAN;
+		} else {
+			auto dev = (*this) - this->mean();
+			auto squared_deviation = dev.pow(2);
+			return std::pow(squared_deviation.sum() / (n - ddof), 0.5);
+		}
+	}
 
 
-    arma::vec Series::finiteValues() const {
-        return values().elem(find_finite(values()));
-    }
+	Series::SeriesSize Series::size() const {
+		//assert(index().size() == values().size());
+		return index().size();
+	}
 
 
-    Series::SeriesSize Series::finiteSize() const {
-        //assert(index().size() == values().size());
-        return finiteValues().size();
-    }
+	arma::vec Series::finiteValues() const {
+		return values().elem(find_finite(values()));
+	}
+
+
+	Series::SeriesSize Series::finiteSize() const {
+		//assert(index().size() == values().size());
+		return finiteValues().size();
+	}
 
 
 // done this way so default copy / assignment works.
 // todo; make copies of indices share memory as they are const?
-    const arma::vec Series::index() const {
-        return t;
-    }
+	const arma::vec Series::index() const {
+		return t;
+	}
 
 
-    const arma::vec Series::values() const {
-        return v;
-    }
+	const arma::vec Series::values() const {
+		return v;
+	}
 
 
-    bool Series::equal(const Series &lhs, const Series &rhs) {
-        return lhs.equals(rhs);
-    }
+	bool Series::equal(const Series &lhs, const Series &rhs) {
+		return lhs.equals(rhs);
+	}
 
 
-    bool Series::almost_equal(const Series &lhs, const Series &rhs) {
-        return lhs.almost_equals(rhs);
-    }
+	bool Series::almost_equal(const Series &lhs, const Series &rhs) {
+		return lhs.almost_equals(rhs);
+	}
 
 
-    bool Series::not_equal(const Series &lhs, const Series &rhs) {
-        return !lhs.equals(rhs);
-    }
+	bool Series::not_equal(const Series &lhs, const Series &rhs) {
+		return !lhs.equals(rhs);
+	}
 
-    Series Series::apply(double (*f)(double)) const {
-        arma::vec vals = values();
-        vals.transform([=](double val) { return (f(val)); });
-        return Series(vals, index());
-    }
+	Series Series::apply(double (*f)(double)) const {
+		arma::vec vals = values();
+		vals.transform([=](double val) { return (f(val)); });
+		return Series(vals, index());
+	}
 
-    Series Series::index_as_series() const {
-        return Series(index(), index());
-    }
+	Series Series::index_as_series() const {
+		return Series(index(), index());
+	}
 
-    std::map<double, double> Series::to_map() const {
+	std::map<double, double> Series::to_map() const {
 
-        std::map<double, double> m;
-        // put pairs into map
-        for (int i = 0; i < size(); i++) {
-            m.insert(std::make_pair(index()[i], values()[i]));
-        }
+		std::map<double, double> m;
+		// put pairs into map
+		for (int i = 0; i < size(); i++) {
+			m.insert(std::make_pair(index()[i], values()[i]));
+		}
 
-        return m;
-    }
+		return m;
+	}
 
-    bool Series::empty() const {
-        return (index().is_empty() & values().is_empty());
-    }
+	bool Series::empty() const {
+		return (index().is_empty() & values().is_empty());
+	}
 
-    // TODO: Modify head once iloc has been refactored to accept slicing logic.
-    Series Series::head(int n) const  {
-        Series ser(values(), index());
-        if(n >= ser.size()){
-            return ser;
-        } else {
-            arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(0, n));
-            return ser.iloc(indices);
-        }
-    }
+	// TODO: Modify head once iloc has been refactored to accept slicing logic.
+	Series Series::head(int n) const  {
+		Series ser(values(), index());
+		if(n >= ser.size()){
+			return ser;
+		} else {
+			arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(0, n));
+			return ser.iloc(indices);
+		}
+	}
 
-    // TODO: Modify tail once iloc has been refactored to accept slicing logic.
-    Series Series::tail(int n) const  {
+	// TODO: Modify tail once iloc has been refactored to accept slicing logic.
+	Series Series::tail(int n) const  {
 
-        Series ser(values(), index());
+		Series ser(values(), index());
 
-        if(n >= ser.size()){
-            return ser;
-        } else {
-            arma::uword l = ser.size() - n;
-            arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(l, ser.size()));
-            return ser.iloc(indices);
-        }
-    }
+		if(n >= ser.size()){
+			return ser;
+		} else {
+			arma::uword l = ser.size() - n;
+			arma::uvec indices = arma::conv_to<arma::uvec>::from(polars::numc::arange(l, ser.size()));
+			return ser.iloc(indices);
+		}
+	}
 
-    Series Series::arctan2(const Series &lhs, const Series &rhs) {
-        arma::vec x = lhs.values();
-        arma::vec y = rhs.values();
-        arma::vec result = numc::arctan2(x, y);
-        return Series(result, lhs.index());
-    }
+	Series Series::arctan2(const Series &lhs, const Series &rhs) {
+		arma::vec x = lhs.values();
+		arma::vec y = rhs.values();
+		arma::vec result = numc::arctan2(x, y);
+		return Series(result, lhs.index());
+	}
 
-    Series Series::concat(const Series &lhs, const Series &rhs) {
-        arma::vec expanded_values = lhs.values();
-        arma::vec expanded_indices = lhs.index();
-        expanded_values.insert_rows(lhs.values().size(), rhs.values());
-        expanded_indices.insert_rows(lhs.values().size(), rhs.index());
-        return Series(expanded_values, expanded_indices);
-    }
+	Series Series::concat(const Series &lhs, const Series &rhs) {
+		arma::vec expanded_values = lhs.values();
+		arma::vec expanded_indices = lhs.index();
+		expanded_values.insert_rows(lhs.values().size(), rhs.values());
+		expanded_indices.insert_rows(lhs.values().size(), rhs.index());
+		return Series(expanded_values, expanded_indices);
+	}
 
-    /**
-     * Add support for pretty printing of a Series object.
-     * @param os the output stream that will be written to
-     * @param ts the Series instance to output
-     * @return the ostream for further piping
-     */
-    std::ostream &operator<<(std::ostream &os, const Series &ts) {
+	/**
+	 * Add support for pretty printing of a Series object.
+	 * @param os the output stream that will be written to
+	 * @param ts the Series instance to output
+	 * @return the ostream for further piping
+	 */
+	std::ostream &operator<<(std::ostream &os, const Series &ts) {
 
-        if(ts.size() >= 5){
-            os << "Series:\nindices\n" << ts.head(5).index() << "values\n" << ts.head(5).values();
-            os << "\n....\n";
-            os << "Series:\nindices\n" << ts.tail(5).index() << "values\n" << ts.tail(5).values();
-            return os;
-        } else {
-            return os << "Series:\nindices\n" << ts.index() << "values\n" << ts.values();
-        }
-    }
+		if(ts.size() >= 5){
+			os << "Series:\nindices\n" << ts.head(5).index() << "values\n" << ts.head(5).values();
+			os << "\n....\n";
+			os << "Series:\nindices\n" << ts.tail(5).index() << "values\n" << ts.tail(5).values();
+			return os;
+		} else {
+			return os << "Series:\nindices\n" << ts.index() << "values\n" << ts.values();
+		}
+	}
 }; // polars
