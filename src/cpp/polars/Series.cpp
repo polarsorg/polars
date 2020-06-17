@@ -464,6 +464,106 @@ namespace polars {
         return Series(new_values, new_timestamps);
     }
 
+    std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool symmetric, int centerIdx){
+
+		arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
+
+		arma::sword leftIdx = centerIdx - centerOffset;
+		arma::sword rightIdx = centerIdx - centerOffset + windowSize - 1;
+		arma::sword weightLeftIdx = 0;
+		arma::sword weightRightIdx = windowSize - 1;
+
+		if (symmetric) {
+			// This option works for odd windows only.
+			if (leftIdx < 0) {
+				arma::sword left_err = leftIdx;
+				arma::sword right_err = windowSize - 1 - centerIdx - centerOffset;
+
+				weightLeftIdx = weightLeftIdx - left_err;
+				weightRightIdx = weightRightIdx - right_err;
+
+				rightIdx = rightIdx - right_err;
+				leftIdx = leftIdx - left_err;
+			}
+			if (rightIdx >= inputSize) {
+				arma::sword r_clipped = rightIdx - inputSize;
+
+				arma::sword left_err = -r_clipped - 1;
+				arma::sword right_err = rightIdx - (inputSize - 1);
+
+				weightLeftIdx = weightLeftIdx - left_err;
+				weightRightIdx = weightRightIdx - right_err;
+
+				leftIdx = leftIdx - left_err;
+				rightIdx = rightIdx - right_err;
+			}
+
+		} else {
+			if (leftIdx < 0) {
+				arma::sword left_err = leftIdx;
+
+				weightLeftIdx = weightLeftIdx - left_err;
+				leftIdx = leftIdx - left_err;
+			}
+
+			if (rightIdx >= inputSize) {
+				arma::sword right_err = rightIdx - (inputSize - 1);
+
+				weightRightIdx = weightRightIdx - right_err;
+				rightIdx = rightIdx - right_err;
+			}
+		}
+		return {leftIdx, rightIdx, weightLeftIdx, weightRightIdx};
+    }
+
+    Series
+    Series::ewm(SeriesSize windowSize, SeriesSize minPeriods, bool center, double alpha) const {
+		arma::vec input_values = v;
+		arma::vec input_idx = t;
+
+		Series padded_input = _ewm_input_correction(*this);
+		input_values = padded_input.values();
+		input_idx = padded_input.index();
+
+		// Set window size to be the same as the size of the array
+		windowSize = this->size();
+
+		if (minPeriods == 0) {
+			minPeriods = windowSize;
+		}
+
+		arma::vec resultv(arma::size(input_values));
+
+		for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
+			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
+			std::tie(leftIdx, rightIdx, weightLeftIdx, weightRightIdx) = get_interval_edges(windowSize, input_idx.size(), false, centerIdx);
+			arma::vec values = input_values.subvec(leftIdx, rightIdx);
+
+			// Define weights vector required for specific windows
+			arma::vec exponential_weights = reverse(
+				polars::numc::exponential(windowSize, -1. / log(1 - alpha), false, 0)
+			);
+			arma::vec weights(arma::size(values));
+			weights = exponential_weights.subvec(weightLeftIdx, weightRightIdx);
+
+			const Series subSeries = Series(values, input_idx.subvec(leftIdx, rightIdx));
+
+			if (subSeries.finiteSize() >= minPeriods) {
+				resultv(centerIdx) = polars::ExpMean().processWindow(subSeries, weights);
+			} else {
+				resultv(centerIdx) = polars::ExpMean().defaultValue();
+			}
+		}
+
+		Series result = Series(
+			polars::_ewm_correction(resultv, v, polars::WindowProcessor::WindowType::expn), t);
+
+		if(size() > 0 & windowSize > size()){
+			return Series(result.values().head(size()), t);
+		} else {
+			return result;
+		}
+    }
 
 // todo; allow passing in transformation function rather than WindowProcessor.
     Series
@@ -502,55 +602,8 @@ namespace polars {
 
         // roll a window [left,right], of up to size windowSize, centered on centerIdx, and hand to processor if there are minPeriods finite values.
         for (arma::uword centerIdx = 0; centerIdx < input_idx.size(); centerIdx++) {
-
-            arma::sword leftIdx = centerIdx - centerOffset;
-            arma::sword rightIdx = centerIdx - centerOffset + windowSize - 1;
-            arma::sword weightLeftIdx = 0;
-            arma::sword weightRightIdx = windowSize - 1;
-
-            if (symmetric) {
-                // This option works for odd windows only.
-                if (leftIdx < 0) {
-                    arma::sword left_err = leftIdx;
-                    arma::sword right_err = windowSize - 1 - centerIdx - centerOffset;
-
-                    weightLeftIdx = weightLeftIdx - left_err;
-                    weightRightIdx = weightRightIdx - right_err;
-
-                    rightIdx = rightIdx - right_err;
-                    leftIdx = leftIdx - left_err;
-                }
-
-                if (rightIdx >= input_idx.size()) {
-                    arma::sword r_clipped = rightIdx - input_idx.size();
-
-                    arma::sword left_err = -r_clipped - 1;
-                    arma::sword right_err = rightIdx - (input_idx.size() - 1);
-
-                    weightLeftIdx = weightLeftIdx - left_err;
-                    weightRightIdx = weightRightIdx - right_err;
-
-                    leftIdx = leftIdx - left_err;
-                    rightIdx = rightIdx - right_err;
-                }
-
-            } else {
-
-                if (leftIdx < 0) {
-                    arma::sword left_err = leftIdx;
-
-                    weightLeftIdx = weightLeftIdx - left_err;
-                    leftIdx = leftIdx - left_err;
-                }
-
-                if (rightIdx >= input_idx.size()) {
-                    arma::sword right_err = rightIdx - (input_idx.size() - 1);
-
-                    weightRightIdx = weightRightIdx - right_err;
-                    rightIdx = rightIdx - right_err;
-                }
-            }
-
+			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
+			std::tie(leftIdx, rightIdx, weightLeftIdx, weightRightIdx) = get_interval_edges(windowSize, input_idx.size(), symmetric, centerIdx);
             arma::vec values = input_values.subvec(leftIdx, rightIdx);
 
             // Define weights vector required for specific windows
