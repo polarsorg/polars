@@ -461,7 +461,7 @@ namespace polars {
         return Series(new_values, new_timestamps);
     }
 
-    std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool center, bool symmetric, int centerIdx){
+    std::tuple<int, int, int, int> _get_interval_edges(int windowSize, int inputSize, bool symmetric, int centerIdx) {
 
 		arma::uword centerOffset = round(((float) windowSize - 1) / 2.0);
 
@@ -513,6 +513,20 @@ namespace polars {
 		return {leftIdx, rightIdx, weightLeftIdx, weightRightIdx};
     }
 
+    Series _align_to_left(Series input, int windowSize) {
+		// Only need to realign for center=False and windowSize > input.size()
+		arma::vec moved_values = arma::zeros(windowSize - 1) * NAN;
+
+		auto ceil_half = std::ceil((windowSize-1.0)/2.0);
+		auto rolling_start_idx = ceil_half;
+		auto rolling_end_idx = input.size() - (windowSize - ceil_half);
+
+		arma::vec rolling_values = input.values().subvec(rolling_start_idx, rolling_end_idx);
+		moved_values.insert_rows(windowSize-1, rolling_values);
+		return polars::Series(moved_values, input.index());
+
+    };
+
     Series
     Series::ewm(SeriesSize windowSize, SeriesSize minPeriods, bool center, double alpha) const {
 		arma::vec input_values = v;
@@ -535,7 +549,7 @@ namespace polars {
 			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
 			std::tie(
 					leftIdx, rightIdx, weightLeftIdx, weightRightIdx
-			) = get_interval_edges(windowSize, input_idx.size(), center, false, centerIdx);
+			) = _get_interval_edges(windowSize, input_idx.size(), false, centerIdx);
 			arma::vec values = input_values.subvec(leftIdx, rightIdx);
 
 			// Define weights vector required for specific windows
@@ -593,16 +607,15 @@ namespace polars {
 			int leftIdx, rightIdx, weightLeftIdx, weightRightIdx;
 			std::tie(
 				leftIdx, rightIdx, weightLeftIdx, weightRightIdx
-			) = get_interval_edges(windowSize, input_idx.size(), center, symmetric, centerIdx);
+			) = _get_interval_edges(windowSize, input_idx.size(), symmetric, centerIdx);
             arma::vec values = input_values.subvec(leftIdx, rightIdx);
-
             // Define weights vector required for specific windows
             arma::vec weights(arma::size(values));
             weights = polars::calculate_window_weights(win_type, windowSize).subvec(weightLeftIdx, weightRightIdx);
 
             const Series subSeries = Series(values, input_idx.subvec(leftIdx, rightIdx));
 
-            if (subSeries.finiteSize() >= minPeriods) {
+			if ( subSeries.finiteSize() >= minPeriods) {
                 resultv(centerIdx) = processor.processWindow(subSeries, weights);
             } else {
                 resultv(centerIdx) = processor.defaultValue();
@@ -614,9 +627,12 @@ namespace polars {
         if(size() > 0 & windowSize > size()){
             return Series(result.values().head(size()), t);
         } else {
-            return result;
+        	if( (center == true) || (windowSize <= 2) ){
+				return result;
+        	} else {
+        		return _align_to_left(result, windowSize);
+        	}
         }
-        //return result;
     }
 
     Window Series::rolling(SeriesSize windowSize,

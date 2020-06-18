@@ -171,7 +171,8 @@ namespace polars {
     polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input);
     polars::Series _ewm_input_correction(const polars::Series &input);
 
-	std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool center, bool symmetric, int centerIdx);
+	std::tuple<int, int, int, int> _get_interval_edges(int windowSize, int inputSize, bool symmetric, int centerIdx);
+	polars::Series _align_to_left(Series input, int windowSize);
 }
 
 
