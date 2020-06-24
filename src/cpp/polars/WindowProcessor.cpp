@@ -117,15 +117,11 @@ namespace polars {
     }
 
     Series Window::mean() {
-        if (win_type_ == WindowProcessor::WindowType::expn) {
-            return ts_.rolling(windowSize_, ExpMean(), minPeriods_, center_, symmetric_, win_type_, alpha_);
-        } else {
-            return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_, win_type_, alpha_);
-        }
+        return ts_.rolling(windowSize_, Mean(), minPeriods_, center_, symmetric_, win_type_);
     }
 
     Series Window::sum() {
-        return ts_.rolling(windowSize_, Sum(), minPeriods_, center_, symmetric_, win_type_, alpha_);
+        return ts_.rolling(windowSize_, Sum(), minPeriods_, center_, symmetric_, win_type_);
     }
 
 } // polars

@@ -806,4 +806,56 @@ TEST(Series, concat){
      ) << "Expect" << " an empty series.";
 }
 
+
+TEST(Series, interval_edges) {
+	// Odd WindowSize Even Input
+	EXPECT_TRUE(get_interval_edges(3, 6, true, false, 0) == std::make_tuple(0, 1, 1, 2));
+	EXPECT_TRUE(get_interval_edges(3, 6, true, true, 0) == std::make_tuple(0, 0, 1, 1));
+
+	EXPECT_TRUE(get_interval_edges(3, 6, true, false, 1) == std::make_tuple(0, 2, 0, 2));
+	EXPECT_TRUE(get_interval_edges(3, 6, true, true, 1) == std::make_tuple(0, 2, 0, 2));
+
+	EXPECT_TRUE(get_interval_edges(3, 6, true, false, 5) == std::make_tuple(4, 5, 0, 1));
+	EXPECT_TRUE(get_interval_edges(3, 6, true, true, 5) == std::make_tuple(5, 5, 1, 1));
+
+	// Even WindowSize Odd Input
+	EXPECT_TRUE(get_interval_edges(4, 7, true, false, 0) == std::make_tuple(0, 1, 2, 3));
+	EXPECT_TRUE(get_interval_edges(4, 7, true, true, 0) == std::make_tuple(0, 0, 2, 2));
+
+	EXPECT_TRUE(get_interval_edges(4, 7, true, false, 1) == std::make_tuple(0, 2, 1, 3));
+	EXPECT_TRUE(get_interval_edges(4, 7, true, true, 1) == std::make_tuple(0, 2, 1, 3));
+
+	EXPECT_TRUE(get_interval_edges(4, 7, true, false, 6) == std::make_tuple(4, 6, 0, 2));
+	EXPECT_TRUE(get_interval_edges(4, 7, true, true, 6) == std::make_tuple(5, 6, 1, 2));
+
+	// Odd WindowSize Odd Input
+	EXPECT_TRUE(get_interval_edges(3, 5, true, false, 0) == std::make_tuple(0, 1, 1, 2));
+	EXPECT_TRUE(get_interval_edges(3, 5, true, true, 0) == std::make_tuple(0, 0, 1, 1));
+
+	EXPECT_TRUE(get_interval_edges(3, 5, true, false, 1) == std::make_tuple(0, 2, 0, 2));
+	EXPECT_TRUE(get_interval_edges(3, 5, true, true, 1) == std::make_tuple(0, 2, 0, 2));
+
+	EXPECT_TRUE(get_interval_edges(3, 5, true, false, 4) == std::make_tuple(3, 4, 0, 1));
+	EXPECT_TRUE(get_interval_edges(3, 5, true, true, 4) == std::make_tuple(4, 4, 1, 1));
+
+	// Even WindowSize Even Input
+	EXPECT_TRUE(get_interval_edges(4, 6, true, false, 0) == std::make_tuple(0, 1, 2, 3));
+	EXPECT_TRUE(get_interval_edges(4, 6, true, true, 0) == std::make_tuple(0, 0, 2, 2));
+
+	EXPECT_TRUE(get_interval_edges(4, 6, true, false, 1) == std::make_tuple(0, 2, 1, 3));
+	EXPECT_TRUE(get_interval_edges(4, 6, true, true, 1) == std::make_tuple(0, 2, 1, 3));
+
+	EXPECT_TRUE(get_interval_edges(4, 6, true, false, 5) == std::make_tuple(3, 5, 0, 2));
+	EXPECT_TRUE(get_interval_edges(4, 6, true, true, 5) == std::make_tuple(4, 5, 1, 2));
+
+	// Window = Input
+	EXPECT_TRUE(get_interval_edges(4, 4, true, false, 0) == std::make_tuple(0, 1, 2, 3));
+	EXPECT_TRUE(get_interval_edges(4, 4, true, true, 0) == std::make_tuple(0, 0, 2, 2));
+
+	EXPECT_TRUE(get_interval_edges(4, 4, true, false, 1) == std::make_tuple(0, 2, 1, 3));
+	EXPECT_TRUE(get_interval_edges(4, 4, true, true, 1) == std::make_tuple(0, 2, 1, 3));
+
+	EXPECT_TRUE(get_interval_edges(4, 4, true, false, 3) == std::make_tuple(1, 3, 0, 2));
+	EXPECT_TRUE(get_interval_edges(4, 4, true, true, 3) == std::make_tuple(2, 3, 1, 2));
+}
 } // namespace SeriesTests

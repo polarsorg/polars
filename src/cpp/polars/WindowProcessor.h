@@ -113,8 +113,7 @@ namespace polars {
         double default_value = NAN;
     };
 
-    arma::vec calculate_window_weights(polars::WindowProcessor::WindowType win_type, arma::uword windowSize,
-                                       double alpha = -1);
+    arma::vec calculate_window_weights(polars::WindowProcessor::WindowType win_type, arma::uword windowSize);
 
     arma::vec _ewm_correction(const arma::vec &results, const arma::vec &v0, polars::WindowProcessor::WindowType win_type);
 

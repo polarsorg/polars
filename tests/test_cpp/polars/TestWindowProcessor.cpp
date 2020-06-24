@@ -626,73 +626,50 @@ TEST(Series, rolling_mean_exponential__varying_window_size){
     Series input = Series(input_values, input_timestamps);
 
     for(int i = 1; i<= 60; i++) {
-        Series actual = input.rolling(
-            i, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        );
-
+    	Series actual = input.ewm(i, 1, false, 0.1);
         EXPECT_PRED2(Series::almost_equal, actual, expected) << "Expect " << " matches expectation set by pandas.";
     }
 }
 
 
 TEST(Series, rolling_mean_exponential__shorter_window_size){
-
     // Test cases in which window size < array size
-
-    // even window size
+    // Even window size
     int window_size = 2;
     int decay_windows = 2;
 
-    arma::vec input_values = {5, 6, 7}; // odd sized array
-    arma::vec input_timestamps = {1, 2, 3};
+    Series input = Series({5, 6, 7}, {1, 2, 3});
+
     arma::vec expected = {5.0, 5.666666666666667, 6.428571428571429};
+    Series actual = input.ewm(window_size,  1, false,  1./decay_windows);
 
-    Series input = Series(input_values, input_timestamps);
+    EXPECT_PRED2(
+        Series::almost_equal, actual, Series(expected, {1, 2, 3})
+    )  << "Expect " << " for the odd/even case matches expectation set by pandas.";
 
-    Series actual = input.rolling(
-        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
-    );
-
-    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps))  << "Expect " << " for the odd/even case matches expectation set by pandas.";
-
-    input_values = {5, 6, 7, 8}; // even sized array
-    input_timestamps = {1, 2, 3, 4};
     expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667};
+    actual = Series({5, 6, 7, 8}, {1, 2, 3, 4}).ewm(window_size, 1, false, 1./decay_windows);
 
-    input = Series(input_values, input_timestamps);
+    EXPECT_PRED2(
+    	Series::almost_equal, actual, Series(expected, {1, 2, 3, 4})
+    ) << "Expect " << " for the even/even case matches expectation set by pandas.";
 
-    actual = input.rolling(
-        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
-    );
-
-    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps)) << "Expect " << " for the even/even case matches expectation set by pandas.";
-
-    // odd window size
+    // Odd window size
     window_size = 3;
 
-    input_values = {5, 6, 7, 8, 9}; // odd sized array
-    input_timestamps = {1, 2, 3, 4, 5};
     expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667, 8.161290322580646};
+    actual = Series({5, 6, 7, 8, 9}, {1, 2, 3, 4, 5}).ewm(window_size, 1, false, 1./decay_windows);
 
-    input = Series(input_values, input_timestamps);
+    EXPECT_PRED2(
+    	Series::almost_equal, actual, Series(expected, {1, 2, 3, 4, 5})
+    ) << "Expect " << " for the odd/odd case matches expectation set by pandas.";
 
-    actual = input.rolling(
-        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
-    );
-
-    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps)) << "Expect " << " for the odd/odd case matches expectation set by pandas.";
-
-    input_values = {5, 6, 7, 8, 9, 10}; // even sized array
-    input_timestamps = {1, 2, 3, 4, 5, 6};
     expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667, 8.161290322580646, 9.095238095238095};
+    actual = Series({5, 6, 7, 8, 9, 10}, {1, 2, 3, 4, 5, 6}).ewm(window_size, 1, false, 1./decay_windows);
 
-    input = Series(input_values, input_timestamps);
-
-    actual = input.rolling(
-        window_size, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 1./decay_windows
-    );
-
-    EXPECT_PRED2(Series::almost_equal, actual, Series(expected, input_timestamps)) << "Expect " << " for the even/odd case matches expectation set by pandas.";
+    EXPECT_PRED2(
+    	Series::almost_equal, actual, Series(expected, {1, 2, 3, 4, 5, 6})
+    ) << "Expect " << " for the even/odd case matches expectation set by pandas.";
 }
 
 
@@ -700,9 +677,7 @@ TEST(Series, rolling_mean_exponential_cases){
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({1, 2, NAN, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).rolling(
-            6, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5
-        ),
+        Series({1, 2, NAN, 4, 5, 6}, {1, 2, 3, 4, 5, 6}).ewm(6, 1, false,  0.5),
         Series({1.0, 1.6666666666666667, 1.6666666666666667, 3.3636363636363638, 4.333333333333333, 5.237288135593221},
                {1, 2, 3, 4, 5, 6})
     ) << "Expect " << " matches pandas expectation";
@@ -710,18 +685,14 @@ TEST(Series, rolling_mean_exponential_cases){
 
   EXPECT_PRED2(
         Series::almost_equal,
-        Series({1, 2, NAN, 4, NAN, 6}, {1,2,3,4,5,6}).rolling(
-            8, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5
-        ),
+        Series({1, 2, NAN, 4, NAN, 6}, {1,2,3,4,5,6}).ewm(8, 1, false, 0.5),
         Series({1.0, 1.6666666666666667, 1.6666666666666667, 3.3636363636363638, 3.3636363636363638, 5.325581395348837},
                {1, 2, 3, 4, 5, 6})
     ) << "Expect " << " matches pandas expectation";
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({1, 2, NAN, 4, NAN}, {1,2,3,4,5}).rolling(
-            7, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5
-        ),
+        Series({1, 2, NAN, 4, NAN}, {1,2,3,4,5}).ewm(7, 1, false, 0.5),
         Series({1.0, 1.6666666666666667, 1.6666666666666667, 3.3636363636363638, 3.3636363636363638},
                {1, 2, 3, 4, 5})
     ) << "Expect " << " matches pandas expectation";
@@ -729,62 +700,48 @@ TEST(Series, rolling_mean_exponential_cases){
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            9, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(9, 1, false,  0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectation";
 
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            8, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(8, 1, false, 0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectation";
 
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            7, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(7,  1, false,  0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectation";
 
     //Values at end duplicated.
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            6, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(6,  1, false, 0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectation";
 
     // Double first value and then correct
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            5, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(5, 1, false,  0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectations";
 
     // False and False array same size
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            4, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(4, 1, false, 0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectation";
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).rolling(
-            4, polars::ExpMean(), 1, true, false, polars::WindowProcessor::WindowType::expn, 0.1
-        ),
+        Series({0.1,0.2,0.3,0.4}, {1,2,3,4}).ewm(4, 1, true, 0.1),
         Series({0.1, 0.15263157894736845, 0.20701107011070113, 0.2631288165164292}, {1,2,3,4})
     ) << "Expect " << " matches pandas expectation";
 
@@ -795,51 +752,45 @@ TEST(Series, rolling_mean_exponential) {
 
     EXPECT_PRED2(
         Series::almost_equal,
-        Series({0.1, NAN, 0.3, 0.4}, {1, 2, 3, 4}).fillna(0).rolling(3, polars::ExpMean(), 1, false, false,
-                                                                        polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({0.1, NAN, 0.3, 0.4}, {1, 2, 3, 4}).fillna(0).ewm(3, 1, false, 0.5),
         Series({0.1, 0.03333333333333333, 0.18571428571428572, 0.3}, {1, 2, 3, 4})
     );
 
     EXPECT_PRED2(
             Series::almost_equal,
-            Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, true, false,
-                                                               polars::WindowProcessor::WindowType::expn, 0.5),
+            Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).ewm(4, 1, true, 0.5),
             Series({0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666}, {1, 2, 3, 4})
     ) << "Expect " << " first value to be the same as original series.";
 
     EXPECT_PRED2(
             Series::almost_equal,
-            Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, false, false,
-                                                               polars::WindowProcessor::WindowType::expn, 0.5),
+            Series({0.1, 0.2, 0.3, 0.4}, {1, 2, 3, 4}).ewm(4, 1, false, 0.5),
             Series({0.1, 0.16666666666666667, 0.24285714285714284, 0.32666666666666666}, {1, 2, 3, 4})
     ) << "Expect " << " first value to be the same as original series.";
 
     EXPECT_PRED2(
             Series::equal,
-            Series().rolling(4, polars::ExpMean(), 1, false, false, polars::WindowProcessor::WindowType::expn, 0.5),
+            Series().ewm(4, 1, false, 0.5),
             Series()
     ) << "Expect " << " empty array back.";
 
     EXPECT_PRED2(
             Series::equal,
-            Series({1, NAN, 3}, {1, 2, 3}).rolling(3, polars::ExpMean(), 1, false, false,
-                                                   polars::WindowProcessor::WindowType::expn, 0.5),
+            Series({1, NAN, 3}, {1, 2, 3}).ewm(3, 1, false, 0.5),
             Series({1., 1., 2.6}, {1, 2, 3})
     ) << "Expect " << " ignore NANs when computing weights.";
 
 
     EXPECT_PRED2(
             Series::almost_equal,
-            Series({1, NAN, NAN, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, false, false,
-                                                           polars::WindowProcessor::WindowType::expn, 0.5),
+            Series({1, NAN, NAN, 4}, {1, 2, 3, 4}).ewm(4, 1, false, 0.5),
             Series({1, 1, 1, 3.6666666666666665}, {1, 2, 3, 4})
     ) << "Expect " << "with two NANs. This differs from Pandas as it ignores NAN's when computing the weights.";
 
 
     EXPECT_PRED2(
             Series::equal,
-            Series({1, 2, 3, 4}, {1, 2, 3, 4}).rolling(4, polars::ExpMean(), 1, false, false,
-                                                       polars::WindowProcessor::WindowType::expn, 0.5),
+            Series({1, 2, 3, 4}, {1, 2, 3, 4}).ewm(4, 1, false, 0.5),
             Series({1, 1.6666666666666667, 2.4285714285714284, 3.2666666666666666}, {1, 2, 3, 4})
     ) << "Expect " << "with a window of 4";
 }
@@ -852,44 +803,38 @@ TEST(Series, rolling_mean_exponential_NAN) {
 
     EXPECT_PRED2(
         Series::equal,
-        Series({NAN, NAN, 2, 3, NAN, 4}, {1, 2, 3, 4, 5, 6}).rolling(10, polars::ExpMean(), 1, false, false,
-                                                             polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2, 3, NAN, 4}, {1, 2, 3, 4, 5, 6}).ewm(10,  1, false, 0.5),
         Series({NAN, NAN, 2.0, 2.6666666666666665, 2.6666666666666665, 3.6363636363636362}, {1, 2, 3, 4, 5, 6})
     ) << "Expect " << " same result as without nans when window size is larger than array and intermediate NAN";
 
     EXPECT_PRED2(
         Series::equal,
-        Series({NAN, NAN, 2, 3, 4}, {1, 2, 3, 4, 5}).rolling(10, polars::ExpMean(), 1, false, false,
-                                                             polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2, 3, 4}, {1, 2, 3, 4, 5}).ewm(10,  1, false, 0.5),
         Series({NAN, NAN, 2.0, 2.6666666666666665, 3.4285714285714284}, {1, 2, 3, 4, 5})
     ) << "Expect " << " same result as without nans when window size is larger than array";
 
     EXPECT_PRED2(
         Series::equal,
-        Series({NAN, NAN, 2, 3, 4}, {1, 2, 3, 4, 5}).rolling(3, polars::ExpMean(), 1, false, false,
-                                                 polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2, 3, 4}, {1, 2, 3, 4, 5}).ewm(3,  1, false, 0.5),
         Series({NAN, NAN, 2.0, 2.6666666666666665, 3.4285714285714284}, {1, 2, 3, 4, 5})
     ) << "Expect " << " same result as without nans when window size is smaller than array";
 
     EXPECT_PRED2(
         Series::equal,
-        Series({NAN, NAN, 2}, {1, 2, 3}).rolling(3, polars::ExpMean(), 1, false, false,
-                                         polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, NAN, 2}, {1, 2, 3}).ewm(3,  1, false, 0.5),
         Series({NAN, NAN, 2}, {1, 2, 3})
     ) << "Expect " << "identity preserving two nans";
 
 
     EXPECT_PRED2(
         Series::equal,
-        Series({NAN, 2}, {1, 2}).rolling(3, polars::ExpMean(), 1, false, false,
-                                                                         polars::WindowProcessor::WindowType::expn, 0.5),
+        Series({NAN, 2}, {1, 2}).ewm(3, 1, false, 0.5),
         Series({NAN, 2}, {1, 2})
     ) << "Expect " << "identity preserving one nan";
 
     EXPECT_PRED2(
         Series::equal,
-        Series(inp, {1, 2, 3, 4, 5, 6}).rolling(6, polars::ExpMean(), 1, false, false,
-                                                polars::WindowProcessor::WindowType::expn, 0.5),
+        Series(inp, {1, 2, 3, 4, 5, 6}).ewm(6, 1, false, 0.5),
         Series(inp, {1, 2, 3, 4, 5, 6})
     ) << "Expect " << "with a window of 6, all nans back";
 

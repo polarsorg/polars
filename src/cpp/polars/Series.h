@@ -100,15 +100,18 @@ namespace polars {
                        SeriesSize minPeriods = 0, /* 0 treated as windowSize */
                        bool center = true,
                        bool symmetric = false,
-                       WindowProcessor::WindowType win_type = WindowProcessor::WindowType::none,
-                       double alpha = -1) const;
+                       WindowProcessor::WindowType win_type = WindowProcessor::WindowType::none) const;
+
+		Series ewm(SeriesSize windowSize,
+				SeriesSize minPeriods,
+				bool center = true,
+				double alpha = -1) const;
 
         Window rolling(SeriesSize windowSize,
                        SeriesSize minPeriods, /* 0 treated as windowSize */
                        bool center,
                        bool symmetric,
-                       polars::WindowProcessor::WindowType win_type,
-                       double alpha = -1) const;
+                       polars::WindowProcessor::WindowType win_type) const;
 
         Rolling rolling(SeriesSize windowSize,
                         SeriesSize minPeriods = 0, /* 0 treated as windowSize */
@@ -167,6 +170,8 @@ namespace polars {
 
     polars::Series _window_size_correction(int window_size, bool center, const polars::Series &input);
     polars::Series _ewm_input_correction(const polars::Series &input);
+
+	std::tuple<int, int, int, int> get_interval_edges(int windowSize, int inputSize, bool center, bool symmetric, int centerIdx);
 }
 
 
