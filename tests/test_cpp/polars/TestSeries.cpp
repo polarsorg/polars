@@ -806,14 +806,6 @@ TEST(Series, concat){
      ) << "Expect" << " an empty series.";
 }
 
-/* THIS IS HOW WE WOULD LIKE IT TO BEHAVE FOR center = false.
-TEST(Series, interval_edges_new) {
-	EXPECT_TRUE(get_interval_edges(3, 5, false, false, 0) == std::make_tuple(0, 0, 2, 2));
-	EXPECT_TRUE(get_interval_edges(3, 5, false, false, 1) == std::make_tuple(0, 1, 1, 2));
-	EXPECT_TRUE(get_interval_edges(3, 5, false, false, 2) == std::make_tuple(0, 2, 0, 2));
-	EXPECT_TRUE(get_interval_edges(3, 5, false, false, 3) == std::make_tuple(1, 3, 0, 2));
-	EXPECT_TRUE(get_interval_edges(3, 5, false, false, 4) == std::make_tuple(2, 4, 0, 2));
-}*/
 
 TEST(Series, interval_edges) {
 	// Odd WindowSize Even Input
@@ -866,7 +858,4 @@ TEST(Series, interval_edges) {
 	EXPECT_TRUE(get_interval_edges(4, 4, true, false, 3) == std::make_tuple(1, 3, 0, 2));
 	EXPECT_TRUE(get_interval_edges(4, 4, true, true, 3) == std::make_tuple(2, 3, 1, 2));
 }
-
-
-
 } // namespace SeriesTests

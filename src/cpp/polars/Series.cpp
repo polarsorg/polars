@@ -24,7 +24,6 @@
 
 namespace polars {
 
-
     using SeriesMask = polars::SeriesMask;
 
     Series::Series() = default;
