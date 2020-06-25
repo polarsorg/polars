@@ -93,7 +93,8 @@ Provides the following methods for a Series:
 * `.tail()`
 * `.to_timeseries_map()`
 * `<<` operator overloading (pretty printing)
-* `.rolling()` supporting mean, quantile, std, sum for flat windows, triangle windows, and (approximated) exponential windows
+* `.rolling()` supporting mean, quantile, std, sum for flat windows and triangle windows.
+* `.ewm()` rolling mean for exponential windows.
 * `arctan2()` element-wise arc tangent of x1/x2 choosing the quadrant correctly
 * `concat()` concatenation of two series
 

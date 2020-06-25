@@ -5,7 +5,6 @@
 #include "polars/Series.h"
 
 #include "polars/SeriesMask.h"
-#include "polars/numc.h"
 
 #include "gtest/gtest.h"
 
