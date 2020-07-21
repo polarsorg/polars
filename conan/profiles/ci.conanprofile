@@ -1,0 +1,10 @@
+include(default)
+
+[settings]
+build_type=Release
+
+[build_requires]
+
+[options]
+Polars:with_tests=True
+date:use_system_tz_db=True

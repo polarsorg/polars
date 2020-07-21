@@ -53,7 +53,7 @@ jobs:
 
       - run:
           name: Native build
-          command: pipenv run conan create . -s compiler.cppstd=14 --build missing --option Polars:with_tests=True
+          command: pipenv run conan create . -s compiler.cppstd=14 --build missing --profile ./conan/profiles/ci.conanprofile
       - run:
           name: Cross-build android arm64-v8a abi
           command: pipenv run conan create . -s compiler.cppstd=14 --build missing --profile ./conan/profiles/android-arm64-v8a
