@@ -65,7 +65,7 @@ jobs:
           name: Unit tests
           command: |
             pipenv run conan source .  --source-folder=source/ci
-            pipenv run conan install . --install-folder=build/ci --build missing --option Polars:with_tests=True
+            pipenv run conan install . --install-folder=build/ci --build missing --profile=../../conan/profiles/ci.conanprofile
             pipenv run conan build .   --source-folder=source/ci --build-folder=build/ci
             build/ci/bin/polars_cpp_test
 
