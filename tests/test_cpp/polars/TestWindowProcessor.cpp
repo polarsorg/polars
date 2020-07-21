@@ -6,13 +6,165 @@
 
 #include "polars/Series.h"
 #include "polars/SeriesMask.h"
-#include "polars/numc.h"
 
 #include "gtest/gtest.h"
 
 
 namespace WindowProcessorTests {
 using Series = polars::Series;
+
+// Tests for rolling median
+
+TEST(Series, rolling_median_nans){
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,NAN,4,5,6}, {1,2,3,4,5,6}).rolling(1, polars::Quantile(0.5), 0, false, false),
+        Series({1,2,NAN,4,5,6}, {1,2,3,4,5,6})
+    ) << "Expect " << " return input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,NAN,4,5,6}, {1,2,3,4,5,6}).rolling(1, polars::Quantile(0.5), 0, true, false),
+        Series({1,2,NAN,4,5,6}, {1,2,3,4,5,6})
+    ) << "Expect " << " return input";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,NAN,4,5,6}, {1,2,3,4,5,6}).rolling(3, polars::Quantile(0.5), 0, false, false),
+        Series({NAN, NAN, NAN, NAN, NAN, 5.0}, {1,2,3,4,5,6})
+    ) << "Expect " << " odd window on even input to match pandas with center=false";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,NAN,4,5,6}, {1,2,3,4,5,6}).rolling(3, polars::Quantile(0.5), 0, true, false),
+        Series({NAN, NAN, NAN, NAN, 5.0, NAN}, {1,2,3,4,5,6})
+    ) << "Expect " << " odd window on even input to match pandas with center=true";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,NAN,NAN,5,6}, {1,2,3,4,5,6}).rolling(2, polars::Quantile(0.5), 0, true, false),
+        Series({NAN, 1.5, NAN, NAN, NAN, 5.5}, {1,2,3,4,5,6})
+    ) << "Expect " << " even window on even input to match pandas with center=true";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,NAN,NAN,5,6}, {1,2,3,4,5,6}).rolling(2, polars::Quantile(0.5), 0, false, false),
+        Series({NAN, 1.5, NAN, NAN, NAN, 5.5}, {1,2,3,4,5,6})
+    ) << "Expect " << " even window on even input to match pandas with center=true";
+}
+
+
+TEST(Series, rolling_median_center_false_sym_false){
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(3, 0, false, false).median(),
+        Series({NAN, NAN, 2.0, 3.0, 4.0}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with odd window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5,6}, {1,2,3,4,5,6}).rolling(3, 0, false, false).median(),
+        Series({NAN, NAN, 2.0, 3.0, 4.0, 5.0}, {1,2,3,4,5,6})
+    ) << "Expect " << " output to match pandas with odd window and even input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4}, {1,2,3,4}).rolling(3, 0, false, false).median(),
+        Series({NAN, NAN, 2.0, 3.0}, {1,2,3,4})
+    ) << "Expect " << " output to match pandas with odd window and even input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1 ,2 ,3,4}, {1,2,3,4}).rolling(2, 0, false, false).mean(),
+        Series({NAN, 1.5, 2.5, 3.5}, {1, 2, 3, 4})
+    ) << "Expect " << " output to match pandas with even window and even input.";
+
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(4, 0, false, false).median(),
+        Series({NAN, NAN, NAN, 2.5, 3.5}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with even window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3}, {1,2,3}).rolling(2, 0, false, false).median(),
+        Series({NAN, 1.5, 2.5}, {1,2,3})
+    ) << "Expect " << " output to match pandas with even window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(5, 0, false, false).median(),
+        Series({NAN, NAN, NAN, NAN, 3.0}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with windowSize = inputSize";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4}, {1,2,3,4}).rolling(4, 0, false, false).median(),
+        Series({NAN, NAN, NAN, 2.5}, {1,2,3,4})
+    ) << "Expect " << " output to match pandas with windowSize = inputSize";
+}
+
+
+TEST(Series, rolling_median_center_true_sym_false){
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(3, polars::Quantile(0.5), 0, true, false),
+        Series({NAN, 2.0, 3.0, 4.0, NAN}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with odd window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(3, 0, true, false).median(),
+        Series({NAN, 2.0, 3.0, 4.0, NAN}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with odd window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5,6}, {1,2,3,4,5,6}).rolling(3, 0, true, false).median(),
+        Series({NAN, 2.0, 3.0, 4.0, 5.0, NAN}, {1,2,3,4,5,6})
+    ) << "Expect " << " output to match pandas with odd window and even input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4}, {1,2,3,4}).rolling(3, 0, true, false).median(),
+        Series({NAN, 2.0, 3.0, NAN}, {1,2,3,4})
+    ) << "Expect " << " output to match pandas with odd window and even input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1 ,2 ,3,4}, {1,2,3,4}).rolling(2, 0, true, false).mean(),
+        Series({NAN, 1.5, 2.5, 3.5}, {1, 2, 3, 4})
+    ) << "Expect " << " output to match pandas with even window and even input.";
+
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(4, 0, true, false).median(),
+        Series({NAN, NAN, 2.5, 3.5, NAN}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with even window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3}, {1,2,3}).rolling(2, 0, true, false).median(),
+        Series({NAN, 1.5, 2.5}, {1,2,3})
+    ) << "Expect " << " output to match pandas with even window and odd input.";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4,5}, {1,2,3,4,5}).rolling(5, 0, true, false).median(),
+        Series({NAN, NAN, 3.0, NAN, NAN}, {1,2,3,4,5})
+    ) << "Expect " << " output to match pandas with windowSize = inputSize";
+
+    EXPECT_PRED2(
+        Series::equal,
+        Series({1,2,3,4}, {1,2,3,4}).rolling(4, 0, true, false).median(),
+        Series({NAN, NAN, 2.5, NAN}, {1,2,3,4})
+    ) << "Expect " << " output to match pandas with windowSize = inputSize";
+}
+
 
 TEST(Series, RollingQuantileTest) {
     EXPECT_PRED2(Series::equal, Series(arma::vec({}), arma::vec({})),
@@ -626,7 +778,7 @@ TEST(Series, rolling_mean_exponential__varying_window_size){
     Series input = Series(input_values, input_timestamps);
 
     for(int i = 1; i<= 60; i++) {
-    	Series actual = input.ewm(i, 1, false, 0.1);
+        Series actual = input.ewm(i, 1, false, 0.1);
         EXPECT_PRED2(Series::almost_equal, actual, expected) << "Expect " << " matches expectation set by pandas.";
     }
 }
@@ -651,7 +803,7 @@ TEST(Series, rolling_mean_exponential__shorter_window_size){
     actual = Series({5, 6, 7, 8}, {1, 2, 3, 4}).ewm(window_size, 1, false, 1./decay_windows);
 
     EXPECT_PRED2(
-    	Series::almost_equal, actual, Series(expected, {1, 2, 3, 4})
+        Series::almost_equal, actual, Series(expected, {1, 2, 3, 4})
     ) << "Expect " << " for the even/even case matches expectation set by pandas.";
 
     // Odd window size
@@ -661,14 +813,14 @@ TEST(Series, rolling_mean_exponential__shorter_window_size){
     actual = Series({5, 6, 7, 8, 9}, {1, 2, 3, 4, 5}).ewm(window_size, 1, false, 1./decay_windows);
 
     EXPECT_PRED2(
-    	Series::almost_equal, actual, Series(expected, {1, 2, 3, 4, 5})
+        Series::almost_equal, actual, Series(expected, {1, 2, 3, 4, 5})
     ) << "Expect " << " for the odd/odd case matches expectation set by pandas.";
 
     expected = {5.0, 5.666666666666667, 6.428571428571429, 7.266666666666667, 8.161290322580646, 9.095238095238095};
     actual = Series({5, 6, 7, 8, 9, 10}, {1, 2, 3, 4, 5, 6}).ewm(window_size, 1, false, 1./decay_windows);
 
     EXPECT_PRED2(
-    	Series::almost_equal, actual, Series(expected, {1, 2, 3, 4, 5, 6})
+        Series::almost_equal, actual, Series(expected, {1, 2, 3, 4, 5, 6})
     ) << "Expect " << " for the even/odd case matches expectation set by pandas.";
 }
 
