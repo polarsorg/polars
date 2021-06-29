@@ -48,8 +48,8 @@ jobs:
       - run:
           name: Add remotes
           command: |
-            pipenv run conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
-            pipenv run conan remote add polars-org-remote https://api.bintray.com/conan/polarsorg/Polars
+            pipenv run conan remote add conancenter https://center.conan.io
+            pipenv run conan remote add polars-conan-remote https://polars.jfrog.io/artifactory/api/conan/polars-conan
 
       - run:
           name: Native build
@@ -59,7 +59,7 @@ jobs:
           command: pipenv run conan create . -s compiler.cppstd=14 --build missing --profile ./conan/profiles/android-arm64-v8a
       - run:
           name: Cross-build android x86_64 abi
-          command: pipenv run conan create . -s compiler.cppstd=14 --build missing --option Polars:with_tests=True --profile ./conan/profiles/android-x86_64
+          command: pipenv run conan create . -s compiler.cppstd=14 --build missing --options Polars:with_tests=True --profile ./conan/profiles/android-x86_64
 
       - run:
           name: Unit tests
@@ -123,15 +123,15 @@ jobs:
       - run:
           name: Add remotes and login
           command: |
-            pipenv run conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
-            pipenv run conan remote add polars-org-remote https://api.bintray.com/conan/polarsorg/Polars
-            pipenv run conan user -p $CONAN_API_KEY -r polars-org-remote $CONAN_LOGIN_USERNAME
+            pipenv run conan remote add conancenter https://center.conan.io
+            pipenv run conan remote add polars-conan-remote https://polars.jfrog.io/artifactory/api/conan/polars-conan
+            pipenv run conan user -p $CONAN_ARTIFACTORY_KEY -r polars-conan-remote $CONAN_LOGIN_USERNAME
 
       - run:
           name: Upload recipe
           command: |
             pipenv run conan export .
-            pipenv run conan upload -r polars-org-remote --confirm Polars/*
+            pipenv run conan upload -r polars-conan-remote --confirm Polars/*
 
 workflows:
   version: 2
@@ -139,7 +139,7 @@ workflows:
     jobs:
       - create
       - push-recipe:
-          context: bintray-machine-user
+          context: artifactory-user
           requires:
             - create
           filters:
