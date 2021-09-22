@@ -46,10 +46,10 @@ jobs:
             - conan-v2-{{ checksum "conanfile.py" }}
 
       - run:
-          name: Add remotes
+          name: Add remotes and login
           command: |
             pipenv run conan remote add conancenter https://center.conan.io --force
-            pipenv run conan remote add polars-conan-local https://polars.jfrog.io/artifactory/api/conan/polars-conan-local
+            pipenv run conan remote add polars-conan-local https://polars.jfrog.io/artifactory/api/conan/polars-conan
 
       - run:
           name: Native build
