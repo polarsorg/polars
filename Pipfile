@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 conan = "*"
 cmake = "*"
+urllib3 = ">=1.26.5"
 
 [packages]
 

@@ -123,7 +123,7 @@ jobs:
       - run:
           name: Add remotes and login
           command: |
-            pipenv run conan remote add conancenter https://center.conan.io -- force
+            pipenv run conan remote add conancenter https://center.conan.io --force
             pipenv run conan remote add polars-conan-remote https://polars.jfrog.io/artifactory/api/conan/polars-conan
             pipenv run conan user -p $CONAN_ARTIFACTORY_KEY -r polars-conan-remote $CONAN_LOGIN_USERNAME
 
