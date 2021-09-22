@@ -2,6 +2,7 @@ include(default)
 
 [settings]
 build_type=Release
+compiler.libcxx=libc++
 
 [build_requires]
 
