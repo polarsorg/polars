@@ -6,7 +6,6 @@ jobs:
       - image: circleci/python:3.7.2
         environment:
           PIPENV_VENV_IN_PROJECT: true
-          CONAN_NON_INTERACTIVE: true
     steps:
       - checkout
 
@@ -48,18 +47,22 @@ jobs:
       - run:
           name: Add remotes and login
           command: |
-            pipenv run conan remote add conancenter https://center.conan.io --force
+            pipenv run conan remote clean
+            pipenv run conan remote add conancenter https://center.conan.io
             pipenv run conan remote add polars-conan-local https://polars.jfrog.io/artifactory/api/conan/polars-conan
 
       - run:
           name: Native build
           command: pipenv run conan create . -s compiler.cppstd=14 --build missing --profile ./conan/profiles/ci.conanprofile
       - run:
+          name: Install android-ndk
+          command: pipenv run conan install android-ndk/r21d@ --profile ./conan/profiles/linux-profile
+      - run:
           name: Cross-build android arm64-v8a abi
-          command: pipenv run conan create . -s compiler.cppstd=14 --build missing --profile ./conan/profiles/android-arm64-v8a
+          command: pipenv run conan create .  -s:h compiler.cppstd=14 --build missing --profile:build ./conan/profiles/linux-profile --profile:host ./conan/profiles/android-armv8-profile
       - run:
           name: Cross-build android x86_64 abi
-          command: pipenv run conan create . -s compiler.cppstd=14 --build missing --options Polars:with_tests=True --profile ./conan/profiles/android-x86_64
+          command: pipenv run conan create . -s:h compiler.cppstd=14 --build missing --profile:build ./conan/profiles/linux-profile --profile:host ./conan/profiles/android-x86_64-profile --options Polars:with_tests=True
 
       - run:
           name: Unit tests
@@ -71,10 +74,10 @@ jobs:
 
       - save_cache:
           name: Save conan dependencies cache
-          key: conan-v2-{{ checksum "conan/conanfile.py" }}
+          key: conan-v2-{{ checksum "conanfile.py" }}
           paths:
             - "~/.conan/data/Armadillo"
-            - "~/.conan/data/android_ndk_installer"
+            - "~/.conan/data/android-ndk"
             - "~/.conan/data/openblas"
             - "~/.conan/data/pkg-config_installer"
 
@@ -84,7 +87,6 @@ jobs:
       - image: circleci/python:3.7.2
         environment:
           PIPENV_VENV_IN_PROJECT: true
-          CONAN_NON_INTERACTIVE: true
     steps:
       - checkout
 
@@ -123,9 +125,10 @@ jobs:
       - run:
           name: Add remotes and login
           command: |
-            pipenv run conan remote add conancenter https://center.conan.io --force
+            pipenv run conan remote clean
+            pipenv run conan remote add conancenter https://center.conan.io
             pipenv run conan remote add polars-conan-remote https://polars.jfrog.io/artifactory/api/conan/polars-conan
-            pipenv run conan user -p $CONAN_ARTIFACTORY_KEY -r polars-conan-remote $CONAN_LOGIN_USERNAME
+            pipenv run conan user $CONAN_LOGIN_USERNAME -r polars-conan-remote -p $CONAN_USER_PASSWORD
 
       - run:
           name: Upload recipe

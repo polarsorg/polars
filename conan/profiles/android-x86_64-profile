@@ -1,0 +1,17 @@
+[settings]
+os=Android
+os.api_level=21
+
+arch=x86_64
+
+compiler=clang
+compiler.libcxx=libc++
+compiler.version=9
+
+build_type=Release
+
+[options]
+date:use_system_tz_db=True
+
+[build_requires]
+*: android-ndk/r21d, cmake/3.19.0, ninja/1.10.1
