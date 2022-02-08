@@ -18,8 +18,8 @@ jobs:
       - restore_cache:
           name: Restore pipenv cache
           keys:
-            - pipenv-v2-{{ checksum "Pipfile.lock" }}
-            - pipenv-v2-
+            - pipenv-v3-{{ checksum "Pipfile.lock" }}
+            - pipenv-v3-
 
       - run:
           name: Install pipenv
@@ -33,7 +33,7 @@ jobs:
 
       - save_cache:
           name: Save pipenv cache
-          key: pipenv-v2-{{ checksum "Pipfile.lock" }}
+          key: pipenv-v3-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
@@ -42,7 +42,7 @@ jobs:
       - restore_cache:
           name: Restore conan dependencies cache
           keys:
-            - conan-v2-{{ checksum "conanfile.py" }}
+            - conan-v3-{{ checksum "conanfile.py" }}
 
       - run:
           name: Add remotes and login
@@ -74,7 +74,7 @@ jobs:
 
       - save_cache:
           name: Save conan dependencies cache
-          key: conan-v2-{{ checksum "conanfile.py" }}
+          key: conan-v3-{{ checksum "conanfile.py" }}
           paths:
             - "~/.conan/data/Armadillo"
             - "~/.conan/data/android-ndk"
@@ -99,8 +99,8 @@ jobs:
       - restore_cache:
           name: Restore pipenv cache
           keys:
-            - pipenv-v2-{{ checksum "Pipfile.lock" }}
-            - pipenv-v2-
+            - pipenv-v3-{{ checksum "Pipfile.lock" }}
+            - pipenv-v3-
 
       - run:
           name: Install pipenv
@@ -114,7 +114,7 @@ jobs:
 
       - save_cache:
           name: Save pipenv cache
-          key: pipenv-v2-{{ checksum "Pipfile.lock" }}
+          key: pipenv-v3-{{ checksum "Pipfile.lock" }}
           paths:
             - ".venv"
             - "/usr/local/bin"
