@@ -16,7 +16,7 @@ git submodule update --init --recursive
 
 This will fetch the dependencies (google test, date.h and armadillo at present).
 
-The library should be easily integratable with `add_submodule` but this is yet to be tested.
+The library should be easy to integrate with `add_submodule` but this is yet to be tested.
 
 If you get a dirty tree in dependencies/armadillo-code/examples/Makefile you may want to:
 
@@ -32,16 +32,14 @@ To install - WIP (need to add the install() command to the CMakeLists.txt)
 
 ### Building with Conan
 
-
-
 Building with Conan requires:
 * `Armadillo/9.200.1` ([repo](https://github.com/polarsorg/conan-armadillo))
-* `date/2.4.1` ([repo](https://github.com/conan-io/conan-center-index), [bintray](https://bintray.com/conan/conan-center/date%3A_))
+* `date/3.0.1` ([Conan Center](https://conan.io/center/date))
 
 Armadillo and polars can both be found in the polars org remote. Build with:
 
 ```
-conan remote add polars-org https://api.bintray.com/conan/polarsorg/Polars
+conan remote add polars-org https://polars.jfrog.io/artifactory/api/conan/polars-conan
 cd conan
 conan create . -s compiler.cppstd=14 --build missing
  ```
@@ -49,7 +47,7 @@ conan create . -s compiler.cppstd=14 --build missing
 To build for android:
 
 ```
-conan create . -s compiler.cppstd=14 --build missing --profile ./profiles/android-arm64-v8a
+conan create .  -s:h compiler.cppstd=14 --build missing --profile:build ./conan/profiles/linux-profile --profile:host ./conan/profiles/android-armv8-profile
 ```
 
 ## What is polars?
@@ -62,7 +60,6 @@ In general:
 * CMake installation (WIP)
 * Developed and tested on macos primarily but should support linux distros
 * Benefits from Accellerate on osx and ios through underlying library
-* Benefits from other BLAS acceleration on linux and android through underlying library
 * Good unit test coverage
 * Alpha release - expect breaking changes in the near future, but will settle down quickly as we are following pandas.
 

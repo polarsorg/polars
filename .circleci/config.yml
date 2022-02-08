@@ -15,11 +15,11 @@ jobs:
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
 
-      #- restore_cache:
-      #    name: Restore pipenv cache
-      #    keys:
-      #      - pipenv-v3-{{ checksum "Pipfile.lock" }}
-      #      - pipenv-v3-
+      - restore_cache:
+          name: Restore pipenv cache
+          keys:
+            - pipenv-v4-{{ checksum "Pipfile.lock" }}
+            - pipenv-v4-
 
       - run:
           name: Install pipenv
@@ -31,18 +31,18 @@ jobs:
             pipenv clean
             pipenv install --dev
 
-      #- save_cache:
-      #    name: Save pipenv cache
-      #    key: pipenv-v3-{{ checksum "Pipfile.lock" }}
-      #    paths:
-      #      - ".venv"
-      #      - "/usr/local/bin"
-       #     - "/usr/local/lib/python3.7/site-packages"
+      - save_cache:
+          name: Save pipenv cache
+          key: pipenv-v4-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
 
-      #- restore_cache:
-      #    name: Restore conan dependencies cache
-      #    keys:
-      #      - conan-v3-{{ checksum "conanfile.py" }}
+      - restore_cache:
+          name: Restore conan dependencies cache
+          keys:
+            - conan-v4-{{ checksum "conanfile.py" }}
 
       - run:
           name: Add remotes and login
@@ -72,14 +72,14 @@ jobs:
             pipenv run conan build .   --source-folder=source/ci --build-folder=build/ci
             build/ci/bin/polars_cpp_test
 
-          #- save_cache:
-          #name: Save conan dependencies cache
-          #key: conan-v3-{{ checksum "conanfile.py" }}
-            #paths:
-            #- "~/.conan/data/Armadillo"
-            #- "~/.conan/data/android-ndk"
-            #- "~/.conan/data/openblas"
-          #- "~/.conan/data/pkg-config_installer"
+      - save_cache:
+          name: Save conan dependencies cache
+          key: conan-v4-{{ checksum "conan/conanfile.py" }}
+          paths:
+            - "~/.conan/data/Armadillo"
+            - "~/.conan/data/android-ndk"
+            - "~/.conan/data/openblas"
+            - "~/.conan/data/pkg-config_installer"
 
   push-recipe:
     working_directory: ~/circleci-polars
@@ -96,11 +96,11 @@ jobs:
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
 
-      #- restore_cache:
-      #    name: Restore pipenv cache
-      #    keys:
-      #      - pipenv-v3-{{ checksum "Pipfile.lock" }}
-      #      - pipenv-v3-
+      - restore_cache:
+          name: Restore pipenv cache
+          keys:
+            - pipenv-v4-{{ checksum "Pipfile.lock" }}
+            - pipenv-v4-
 
       - run:
           name: Install pipenv
@@ -112,13 +112,13 @@ jobs:
             pipenv clean
             pipenv install --dev
 
-          #- save_cache:
-          #    name: Save pipenv cache
-          #   key: pipenv-v3-{{ checksum "Pipfile.lock" }}
-            #   paths:
-            #     - ".venv"
-            #     - "/usr/local/bin"
-      #     - "/usr/local/lib/python3.7/site-packages"
+      - save_cache:
+          name: Save pipenv cache
+          key: pipenv-v4-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.7/site-packages"
 
       # No need to do any compiling here as we have already run the create job.
 
