@@ -8,4 +8,3 @@ build_type=Release
 [options]
 Polars:with_tests=True
 date:use_system_tz_db=True
-date:use_os_tzdb=True
